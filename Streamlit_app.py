@@ -5,9 +5,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
 import shap
+import openai
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
+
+# Set up OpenAI API Key (Replace with actual key)
+openai.api_key = "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"
 
 @st.cache_data
 def load_data():
@@ -106,5 +110,23 @@ if df is not None:
     fig, ax = plt.subplots()
     sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
+    
+    # Chatbot Integration
+    st.subheader("🤖 PCOS Chatbot")
+    st.write("Ask me anything about PCOS, symptoms, treatments, and more!")
+
+    def chat_with_bot(prompt):
+        """Generates response using OpenAI API"""
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "You are a helpful assistant specializing in PCOS-related information."},
+                      {"role": "user", "content": prompt}]
+        )
+        return response["choices"][0]["message"]["content"]
+
+    user_message = st.text_input("Ask a question:")
+    if user_message:
+        response = chat_with_bot(user_message)
+        st.write("**Chatbot:**", response)
 else:
     st.write("Please upload the required CSV file.")
