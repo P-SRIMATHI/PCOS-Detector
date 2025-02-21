@@ -1,4 +1,4 @@
- import os
+import os
 import pandas as pd
 import streamlit as st
 
@@ -16,6 +16,7 @@ def load_data():
         return None
 
 df = load_data()
+
 if df is not None:
     st.write("Data Loaded Successfully!")
 else:
