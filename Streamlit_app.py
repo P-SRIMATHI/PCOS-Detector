@@ -51,7 +51,7 @@ def calculate_bmi(weight, height):
 if df is not None:
     X, y, scaler, feature_columns = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
     model.fit(X_train, y_train)
     
     # Streamlit UI
@@ -68,11 +68,12 @@ if df is not None:
     if st.sidebar.button("Submit"):
         input_df = pd.DataFrame([user_input])
         input_df[feature_columns] = scaler.transform(input_df[feature_columns])
-        prediction = model.predict(input_df)[0]
+        prediction_prob = model.predict_proba(input_df)[0][1]  # Probability of PCOS
+        prediction = 1 if prediction_prob > 0.5 else 0
 
         st.write("### Prediction:")
         if prediction == 1:
-            st.error("PCOS Detected")
+            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
             st.write("### Analysis and Suggestions:")
             st.write("- PCOS is a hormonal disorder common among women of reproductive age.")
             st.write("- Symptoms include irregular periods, weight gain, and acne.")
@@ -82,7 +83,7 @@ if df is not None:
             st.write("- Consult a gynecologist for further evaluation.")
             st.write("- Monitor blood sugar and hormonal levels frequently.")
         else:
-            st.success("No PCOS Detected")
+            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
             st.write("### General Analysis Report:")
             st.write("- Your hormone levels are within the expected range.")
             st.write("- Your weight and height are within the normal range.")
