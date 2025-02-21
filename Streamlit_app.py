@@ -48,8 +48,8 @@ if df is not None:
     model.fit(X_train, y_train)
     
     # SHAP Explanation
-    explainer = shap.Explainer(model, X_train)
-    shap_values = explainer(X_test)
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test)
     
     st.title("PCOS Prediction App")
     st.sidebar.header("User Input")
@@ -69,7 +69,7 @@ if df is not None:
         # SHAP Summary Plot
         st.subheader("Feature Importance (SHAP Values)")
         fig, ax = plt.subplots()
-        shap.summary_plot(shap_values, X_test, show=False)
+        shap.summary_plot(shap_values[1], X_test, show=False)
         st.pyplot(fig)
         
         # Visualization of PCOS cases
