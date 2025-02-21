@@ -50,33 +50,8 @@ if df is not None:
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
     
-    # SHAP Explanation
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test)
-    
+    # Streamlit UI
     st.title("PCOS Prediction App")
-    
-    # Display Graphs Before Input
-    st.subheader("Feature Importance (SHAP Values)")
-    fig, ax = plt.subplots()
-    shap.summary_plot(shap_values[1], X_test, show=False)
-    st.pyplot(fig)
-    
-    st.subheader("PCOS Case Distribution")
-    fig, ax = plt.subplots()
-    sns.countplot(x=y, palette=["red", "green"], ax=ax)
-    ax.set_xticklabels(["Negative", "Positive"])
-    st.pyplot(fig)
-    
-    st.subheader("Feature Importance from Model")
-    importances = model.feature_importances_
-    feature_names = X.columns
-    feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
-    feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
-    
-    fig, ax = plt.subplots()
-    sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
-    st.pyplot(fig)
     
     st.sidebar.header("User Input")
     weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
@@ -107,5 +82,29 @@ if df is not None:
             st.write("### General Analysis Report:")
             st.write("- Your hormone levels are within the expected range.")
             st.write("- Your weight and height are within the normal range.")
+    
+    # Display Graphs After Prediction
+    st.subheader("Feature Importance (SHAP Values)")
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test)
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values[1], X_test, show=False)
+    st.pyplot(fig)
+    
+    st.subheader("PCOS Case Distribution")
+    fig, ax = plt.subplots()
+    sns.countplot(x=y, palette=["red", "green"], ax=ax)
+    ax.set_xticklabels(["Negative", "Positive"])
+    st.pyplot(fig)
+    
+    st.subheader("Feature Importance from Model")
+    importances = model.feature_importances_
+    feature_names = X.columns
+    feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
+    feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
+    
+    fig, ax = plt.subplots()
+    sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
+    st.pyplot(fig)
 else:
     st.write("Please upload the required CSV file.")
