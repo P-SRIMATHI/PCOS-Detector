@@ -39,13 +39,13 @@ def preprocess_data(df):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    return pd.DataFrame(X_scaled, columns=X.columns), y, scaler
+    return pd.DataFrame(X_scaled, columns=X.columns), y, scaler, required_columns
 
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
 
 if df is not None:
-    X, y, scaler = preprocess_data(df)
+    X, y, scaler, feature_columns = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
@@ -84,17 +84,28 @@ if df is not None:
     bmi = calculate_bmi(weight, height)
     st.sidebar.write(f"Calculated BMI: {bmi:.2f}")
     
-    user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in X.columns}
+    user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
     
     if st.sidebar.button("Submit"):
         input_df = pd.DataFrame([user_input])
-        input_df[X.columns] = scaler.transform(input_df[X.columns])
+        input_df[feature_columns] = scaler.transform(input_df[feature_columns])
         prediction = model.predict(input_df)[0]
 
         st.write("### Prediction:")
         if prediction == 1:
             st.error("PCOS Detected")
+            st.write("### Analysis and Suggestions:")
+            st.write("- PCOS is a hormonal disorder common among women of reproductive age.")
+            st.write("- Symptoms include irregular periods, weight gain, and acne.")
+            st.write("- It can lead to complications like infertility and metabolic disorders.")
+            st.write("### Recommendations:")
+            st.write("- Maintain a balanced diet and exercise regularly.")
+            st.write("- Consult a gynecologist for further evaluation.")
+            st.write("- Monitor blood sugar and hormonal levels frequently.")
         else:
             st.success("No PCOS Detected")
+            st.write("### General Analysis Report:")
+            st.write("- Your hormone levels are within the expected range.")
+            st.write("- Your weight and height are within the normal range.")
 else:
     st.write("Please upload the required CSV file.")
