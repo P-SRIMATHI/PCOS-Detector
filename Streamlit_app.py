@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import shap
 import openai
+import speech_recognition as sr
+import pyttsx3
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -112,22 +114,38 @@ if df is not None:
     sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
     
-    # Chatbot Integration
-    st.subheader("🤖 PCOS Chatbot")
-    st.write("Ask me anything about PCOS, symptoms, treatments, and more!")
+    # Voice Assistant
+    st.subheader("🎤 Voice Assistant for PCOS Queries")
+    st.write("Click the button and ask your question about PCOS!")
 
-    def chat_with_bot(prompt):
-        """Generates response using OpenAI API"""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": "You are a helpful assistant specializing in PCOS-related information."},
-                      {"role": "user", "content": prompt}]
-        )
-        return response["choices"][0]["message"]["content"]
+    recognizer = sr.Recognizer()
+    engine = pyttsx3.init()
+    
+    def voice_query():
+        with sr.Microphone() as source:
+            st.write("Listening...")
+            try:
+                audio = recognizer.listen(source, timeout=5)
+                query = recognizer.recognize_google(audio)
+                return query
+            except sr.UnknownValueError:
+                return "Sorry, I couldn't understand. Please try again."
+            except sr.RequestError:
+                return "Error with speech recognition service."
 
-    user_message = st.text_input("Ask a question:")
-    if user_message:
-        response = chat_with_bot(user_message)
-        st.write("**Chatbot:**", response)
+    if st.button("Ask via Voice"):
+        user_voice_input = voice_query()
+        st.write("**You asked:**", user_voice_input)
+        
+        if user_voice_input and "Sorry" not in user_voice_input:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "system", "content": "You are a helpful assistant specializing in PCOS-related information."},
+                          {"role": "user", "content": user_voice_input}]
+            )
+            answer = response["choices"][0]["message"]["content"]
+            st.write("**Voice Assistant:**", answer)
+            engine.say(answer)
+            engine.runAndWait()
 else:
     st.write("Please upload the required CSV file.")
