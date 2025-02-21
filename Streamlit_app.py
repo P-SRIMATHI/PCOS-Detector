@@ -13,7 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
 # Set up OpenAI API Key (Replace with actual key)
-openai.api_key = "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"
+openai.api_key = "AIzaSyDQ0xL1C7wQ3EVci5icAs12-BRti98QXfM"
 
 @st.cache_data
 def load_data():
