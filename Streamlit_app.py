@@ -41,6 +41,9 @@ def preprocess_data(df):
     
     return pd.DataFrame(X_scaled, columns=X.columns), y, scaler
 
+def calculate_bmi(weight, height):
+    return weight / ((height / 100) ** 2)
+
 if df is not None:
     X, y, scaler = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -53,6 +56,11 @@ if df is not None:
     
     st.title("PCOS Prediction App")
     st.sidebar.header("User Input")
+    weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+    height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
+    bmi = calculate_bmi(weight, height)
+    st.sidebar.write(f"Calculated BMI: {bmi:.2f}")
+    
     user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in X.columns}
     
     if st.sidebar.button("Submit"):
@@ -77,6 +85,17 @@ if df is not None:
         fig, ax = plt.subplots()
         sns.countplot(x=y, palette=["red", "green"], ax=ax)
         ax.set_xticklabels(["Negative", "Positive"])
+        st.pyplot(fig)
+
+        # Feature Importance
+        st.subheader("Feature Importance from Model")
+        importances = model.feature_importances_
+        feature_names = X.columns
+        feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
+        feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
+        
+        fig, ax = plt.subplots()
+        sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
         st.pyplot(fig)
 
 else:
