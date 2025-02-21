@@ -52,7 +52,7 @@ def calculate_bmi(weight, height):
 
 if df is not None:
     X, y, scaler, feature_columns = preprocess_data(df)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
     model.fit(X_train, y_train)
     
@@ -71,7 +71,7 @@ if df is not None:
         input_df = pd.DataFrame([user_input])
         input_df[feature_columns] = scaler.transform(input_df[feature_columns])
         prediction_prob = model.predict_proba(input_df)[0][1]  # Probability of PCOS
-        prediction = 1 if prediction_prob > 0.5 else 0
+        prediction = 1 if prediction_prob > 0.6 else 0  # Adjusted threshold to 0.6
 
         st.write("### Prediction:")
         if prediction == 1:
@@ -114,38 +114,19 @@ if df is not None:
     sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
     
-    # Voice Assistant
-    st.subheader("🎤 Voice Assistant for PCOS Queries")
-    st.write("Click the button and ask your question about PCOS!")
-
-    recognizer = sr.Recognizer()
-    engine = pyttsx3.init()
-    
-    def voice_query():
-        with sr.Microphone() as source:
-            st.write("Listening...")
-            try:
-                audio = recognizer.listen(source, timeout=5)
-                query = recognizer.recognize_google(audio)
-                return query
-            except sr.UnknownValueError:
-                return "Sorry, I couldn't understand. Please try again."
-            except sr.RequestError:
-                return "Error with speech recognition service."
-
-    if st.button("Ask via Voice"):
-        user_voice_input = voice_query()
-        st.write("**You asked:**", user_voice_input)
-        
-        if user_voice_input and "Sorry" not in user_voice_input:
+    # Chatbot Integration
+    st.subheader("💬 PCOS Chatbot")
+    user_query = st.text_input("Ask me anything about PCOS:")
+    if st.button("Get Answer"):
+        if user_query:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "system", "content": "You are a helpful assistant specializing in PCOS-related information."},
-                          {"role": "user", "content": user_voice_input}]
+                messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
+                          {"role": "user", "content": user_query}]
             )
             answer = response["choices"][0]["message"]["content"]
-            st.write("**Voice Assistant:**", answer)
-            engine.say(answer)
-            engine.runAndWait()
+            st.write("**Chatbot:**", answer)
+        else:
+            st.warning("Please enter a question before clicking Get Answer.")
 else:
     st.write("Please upload the required CSV file.")
