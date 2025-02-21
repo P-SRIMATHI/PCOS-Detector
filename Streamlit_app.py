@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 # Load dataset
 @st.cache_data
 def load_data():
-    df = pd.read_csv("PCOS_infertility.csv")
+    df = pd.read_csv("PCOS_data.csv")
     df.columns = df.columns.str.strip()  # Remove leading/trailing spaces
     return df
 
