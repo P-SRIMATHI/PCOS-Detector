@@ -55,6 +55,29 @@ if df is not None:
     shap_values = explainer.shap_values(X_test)
     
     st.title("PCOS Prediction App")
+    
+    # Display Graphs Before Input
+    st.subheader("Feature Importance (SHAP Values)")
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values[1], X_test, show=False)
+    st.pyplot(fig)
+    
+    st.subheader("PCOS Case Distribution")
+    fig, ax = plt.subplots()
+    sns.countplot(x=y, palette=["red", "green"], ax=ax)
+    ax.set_xticklabels(["Negative", "Positive"])
+    st.pyplot(fig)
+    
+    st.subheader("Feature Importance from Model")
+    importances = model.feature_importances_
+    feature_names = X.columns
+    feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
+    feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
+    
+    fig, ax = plt.subplots()
+    sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
+    st.pyplot(fig)
+    
     st.sidebar.header("User Input")
     weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
     height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
@@ -73,30 +96,5 @@ if df is not None:
             st.error("PCOS Detected")
         else:
             st.success("No PCOS Detected")
-        
-        # SHAP Summary Plot
-        st.subheader("Feature Importance (SHAP Values)")
-        fig, ax = plt.subplots()
-        shap.summary_plot(shap_values[1], X_test, show=False)
-        st.pyplot(fig)
-        
-        # Visualization of PCOS cases
-        st.subheader("PCOS Case Distribution")
-        fig, ax = plt.subplots()
-        sns.countplot(x=y, palette=["red", "green"], ax=ax)
-        ax.set_xticklabels(["Negative", "Positive"])
-        st.pyplot(fig)
-
-        # Feature Importance
-        st.subheader("Feature Importance from Model")
-        importances = model.feature_importances_
-        feature_names = X.columns
-        feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
-        feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
-        
-        fig, ax = plt.subplots()
-        sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
-        st.pyplot(fig)
-
 else:
     st.write("Please upload the required CSV file.")
