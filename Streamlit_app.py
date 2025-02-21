@@ -4,7 +4,7 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    file_path = "PCOS_infertility.csv"
+    file_path = "PCOS_data.csv"
     if not os.path.exists(file_path):
         st.error(f"Error: File '{file_path}' not found. Please upload it.")
         return None
