@@ -115,9 +115,9 @@ if df is not None:
 
         st.write("### Prediction:")
         if prediction == 1:
-            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
+            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%}")
         else:
-            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
+            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%}")
         
         report_path = generate_report(prediction_prob)
         with open(report_path, "rb") as file:
@@ -128,5 +128,21 @@ if df is not None:
     sns.countplot(x=y, palette=["red", "green"], ax=ax)
     ax.set_xticklabels(["Negative", "Positive"])
     st.pyplot(fig)
+    
+    # PCOS Trivia Quiz
+    st.header("PCOS Trivia Quiz")
+    questions = {
+        "What is PCOS?": ["A hormonal disorder", "A type of cancer", "A viral infection", "A digestive disorder"],
+        "Which symptom is common in PCOS?": ["Irregular periods", "Fever", "Low blood pressure", "Hearing loss"],
+        "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "Avoiding all fats", "Sleeping less"]
+    }
+    
+    score = 0
+    for question, options in questions.items():
+        answer = st.radio(question, options)
+        if answer == options[0]:
+            score += 1
+    
+    st.write(f"Your Score: {score}/{len(questions)}")
 else:
     st.write("Please upload the required CSV file.")
