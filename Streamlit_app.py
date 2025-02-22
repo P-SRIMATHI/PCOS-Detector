@@ -8,11 +8,13 @@ import shap
 import openai
 import speech_recognition as sr
 import pyttsx3
+from dotenv import load_dotenv  # Load environment variables
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# Set OpenAI API Key
+# Load API Key securely
+load_dotenv()
 openai.api_key = os.getenv("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")
 
 @st.cache_data
@@ -56,7 +58,6 @@ if df is not None:
     model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
     model.fit(X_train, y_train)
     
-    # Streamlit UI
     st.title("PCOS Prediction App")
     
     st.sidebar.header("User Input")
@@ -70,8 +71,8 @@ if df is not None:
     if st.sidebar.button("Submit"):
         input_df = pd.DataFrame([user_input])
         input_df[feature_columns] = scaler.transform(input_df[feature_columns])
-        prediction_prob = model.predict_proba(input_df)[0][1]  # Probability of PCOS
-        prediction = 1 if prediction_prob > 0.6 else 0  # Adjusted threshold to 0.6
+        prediction_prob = model.predict_proba(input_df)[0][1]
+        prediction = 1 if prediction_prob > 0.6 else 0  
 
         st.write("### Prediction:")
         if prediction == 1:
@@ -79,22 +80,14 @@ if df is not None:
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
     
-    # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
     try:
-        X_test_array = X_test.to_numpy()
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_test_array, check_additivity=False)  # Fixed additivity check
+        explainer = shap.Explainer(model, X_train)
+        shap_values = explainer(X_test)
         
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]  # Select the class index for PCOS predictions
-        
-        if shap_values.shape[1] == X_test.shape[1]:
-            fig, ax = plt.subplots()
-            shap.summary_plot(shap_values, X_test, show=False)
-            st.pyplot(fig)
-        else:
-            st.error("Error: SHAP values shape does not match test data shape.")
+        fig, ax = plt.subplots()
+        shap.summary_plot(shap_values, X_test, show=False)
+        st.pyplot(fig)
     except Exception as e:
         st.error(f"SHAP calculation error: {e}")
     
@@ -114,20 +107,18 @@ if df is not None:
     sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
     
-    # Chatbot Integration
     st.subheader("💬 PCOS Chatbot")
     user_query = st.text_input("Ask me anything about PCOS:")
     if st.button("Get Answer"):
         if user_query:
             try:
-                response = openai.ChatCompletion.create(
+                client = openai.OpenAI()
+                response = client.chat.completions.create(
                     model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
-                        {"role": "user", "content": user_query}
-                    ]
+                    messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
+                              {"role": "user", "content": user_query}]
                 )
-                answer = response["choices"][0]["message"]["content"]
+                answer = response.choices[0].message.content
                 st.write("*Chatbot:*", answer)
             except Exception as e:
                 st.error(f"Chatbot error: {e}")
