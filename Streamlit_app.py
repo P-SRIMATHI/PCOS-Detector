@@ -19,9 +19,13 @@ df = pd.read_csv("PCOS_data.csv")
 df = df.apply(pd.to_numeric, errors='coerce')  # Convert all to numeric
 df.fillna(df.median(numeric_only=True), inplace=True)
 
-# Splitting features & target
-X = df.drop(columns=['PCOS Diagnosis'])  # Replace with actual target column name
-y = df['PCOS Diagnosis']
+# Checking actual column names
+print(df.columns)
+
+# Replace target column name with correct one
+target_column = "PCOS (Yes/No)"  # Adjust this based on actual dataset
+X = df.drop(columns=[target_column])
+y = df[target_column]
 
 # Feature Scaling
 scaler = StandardScaler()
