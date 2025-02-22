@@ -82,18 +82,12 @@ if df is not None:
     # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
     try:
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_test)
-        
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]  # Select the class index for PCOS predictions
-        
-        if shap_values.shape != X_test.shape:
-            st.error("Error: SHAP values matrix shape does not match data matrix.")
-        else:
-            fig, ax = plt.subplots()
-            shap.summary_plot(shap_values, X_test, show=False)
-            st.pyplot(fig)
+        explainer = shap.Explainer(model, X_train)  # Updated for SHAP compatibility
+        shap_values = explainer(X_test)  # Newer SHAP format
+
+        fig, ax = plt.subplots()
+        shap.summary_plot(shap_values, X_test, show=False)
+        st.pyplot(fig)
     except Exception as e:
         st.error(f"SHAP calculation error: {e}")
     
@@ -120,11 +114,13 @@ if df is not None:
         if user_query:
             try:
                 response = openai.ChatCompletion.create(
-                    model="gpt-4",  # Updated API usage
-                    messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
-                              {"role": "user", "content": user_query}]
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
+                        {"role": "user", "content": user_query}
+                    ]
                 )
-                answer = response["choices"][0]["message"]["content"]  # Fixed response format
+                answer = response["choices"][0]["message"]["content"]
                 st.write("*Chatbot:*", answer)
             except Exception as e:
                 st.error(f"Chatbot error: {e}")
