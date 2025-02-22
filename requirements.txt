@@ -1,5 +1,5 @@
-numpy
 pandas
+numpy
 seaborn
 matplotlib
 streamlit
@@ -7,6 +7,7 @@ shap
 openai
 speechrecognition
 pyttsx3
-scikit-learn
 python-dotenv
+scikit-learn
+imblearn
 fpdf
