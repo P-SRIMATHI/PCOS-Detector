@@ -16,7 +16,6 @@ from fpdf import FPDF
 df = pd.read_csv("PCOS_data.csv")
 # Feature Scaling
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
 
 # Handling class imbalance using SMOTE
 smote = SMOTE(sampling_strategy=0.8, random_state=42)
