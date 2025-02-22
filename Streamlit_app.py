@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from fpdf import FPDF
 
 # Load Dataset (Replace with actual file path)
-df = pd.read_csv("pcos_dataset.csv")
+df = pd.read_csv("pcos_data.csv")
 
 # Preprocessing: Handling missing values
 df.fillna(df.median(), inplace=True)
