@@ -13,7 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
 # Set up OpenAI API Key (Replace with actual key)
-openai.api_key = "AIzaSyDQ0xL1C7wQ3EVci5icAs12-BRti98QXfM"
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
 @st.cache_data
 def load_data():
@@ -94,8 +94,12 @@ if df is not None:
     st.subheader("Feature Importance (SHAP Values)")
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_test)
+    
+    if isinstance(shap_values, list):
+        shap_values = shap_values[1]  # Select the class index for PCOS predictions
+    
     fig, ax = plt.subplots()
-    shap.summary_plot(shap_values[1], X_test, show=False)
+    shap.summary_plot(shap_values, X_test, show=False)
     st.pyplot(fig)
     
     st.subheader("PCOS Case Distribution")
