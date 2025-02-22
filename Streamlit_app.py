@@ -37,14 +37,7 @@ grid_search = GridSearchCV(rf, param_grid, scoring='f1', cv=5)
 # Model Evaluation
 
 
-# Precision-Recall Curve
-precision, recall, _ = precision_recall_curve(y_test, y_probs)
-plt.plot(recall, precision, marker='.')
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.title('Precision-Recall Curve')
-plt.savefig("precision_recall_curve.png")
-plt.show()
+ 
 
 # Explainability using SHAP
 explainer = shap.Explainer(best_rf, X_train)
