@@ -139,7 +139,7 @@ if df is not None:
     
     score = 0
     for question, options in questions.items():
-        answer = st.radio(question, options)
+        answer = st.radio(question, options, key=question)
         if answer == options[0]:
             score += 1
     
