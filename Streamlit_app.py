@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# Set up OpenAI API Key
+# Set OpenAI API Key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @st.cache_data
@@ -82,12 +82,19 @@ if df is not None:
     # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
     try:
-        explainer = shap.Explainer(model, X_train)  # Updated for SHAP compatibility
-        shap_values = explainer(X_test)  # Newer SHAP format
-
-        fig, ax = plt.subplots()
-        shap.summary_plot(shap_values, X_test, show=False)
-        st.pyplot(fig)
+        X_test_array = X_test.to_numpy()
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test_array, check_additivity=False)  # Fixed additivity check
+        
+        if isinstance(shap_values, list):
+            shap_values = shap_values[1]  # Select the class index for PCOS predictions
+        
+        if shap_values.shape[1] == X_test.shape[1]:
+            fig, ax = plt.subplots()
+            shap.summary_plot(shap_values, X_test, show=False)
+            st.pyplot(fig)
+        else:
+            st.error("Error: SHAP values shape does not match test data shape.")
     except Exception as e:
         st.error(f"SHAP calculation error: {e}")
     
