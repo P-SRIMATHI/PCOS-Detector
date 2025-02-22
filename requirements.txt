@@ -1,10 +1,12 @@
-streamlit
-pandas
 numpy
+pandas
 seaborn
 matplotlib
+streamlit
 shap
 openai
 speechrecognition
 pyttsx3
 scikit-learn
+python-dotenv
+fpdf
