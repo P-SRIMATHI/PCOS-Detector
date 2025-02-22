@@ -35,11 +35,7 @@ grid_search = GridSearchCV(rf, param_grid, scoring='f1', cv=5)
  
 
 # Model Evaluation
-y_pred = best_rf.predict(X_test)
-y_probs = best_rf.predict_proba(X_test)[:, 1]
-print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
-print("Classification Report:\n", classification_report(y_test, y_pred))
-print("AUC-ROC Score:", roc_auc_score(y_test, y_probs))
+
 
 # Precision-Recall Curve
 precision, recall, _ = precision_recall_curve(y_test, y_probs)
