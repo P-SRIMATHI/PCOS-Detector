@@ -17,7 +17,7 @@ from fpdf import FPDF
 
 # Load API Key securely
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("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")
 
 @st.cache_data
 def load_data():
