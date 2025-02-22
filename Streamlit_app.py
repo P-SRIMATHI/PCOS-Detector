@@ -12,6 +12,7 @@ from dotenv import load_dotenv  # Load environment variables
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
 
 # Load API Key securely
@@ -48,7 +49,10 @@ def preprocess_data(df):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    return pd.DataFrame(X_scaled, columns=X.columns), y, scaler, required_columns
+    smote = SMOTE(random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
+    
+    return pd.DataFrame(X_resampled, columns=X.columns), y_resampled, scaler, required_columns
 
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
@@ -60,7 +64,7 @@ def generate_report(prediction_prob):
     pdf.cell(200, 10, "PCOS Detection Report", ln=True, align='C')
     pdf.ln(10)
     
-    if prediction_prob > 0.6:
+    if prediction_prob > 0.5:
         pdf.multi_cell(0, 10, "Based on your input, there is a high probability of PCOS. Below are some personalized recommendations:")
         pdf.ln(5)
         pdf.multi_cell(0, 10, "Diet Plan:")
@@ -88,7 +92,7 @@ def generate_report(prediction_prob):
 if df is not None:
     X, y, scaler, feature_columns = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+    model = RandomForestClassifier(n_estimators=200, random_state=42, class_weight='balanced')
     model.fit(X_train, y_train)
     
     st.title("PCOS Prediction App")
@@ -105,7 +109,7 @@ if df is not None:
         input_df = pd.DataFrame([user_input])
         input_df[feature_columns] = scaler.transform(input_df[feature_columns])
         prediction_prob = model.predict_proba(input_df)[0][1]
-        prediction = 1 if prediction_prob > 0.6 else 0  
+        prediction = 1 if prediction_prob > 0.5 else 0  
 
         st.write("### Prediction:")
         if prediction == 1:
@@ -116,31 +120,10 @@ if df is not None:
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
     
-    st.subheader("Feature Importance (SHAP Values)")
-    try:
-        explainer = shap.Explainer(model, X_train)
-        shap_values = explainer(X_test)
-        
-        fig, ax = plt.subplots()
-        shap.summary_plot(shap_values, X_test, show=False)
-        st.pyplot(fig)
-    except Exception as e:
-        st.error(f"SHAP calculation error: {e}")
-    
     st.subheader("PCOS Case Distribution")
     fig, ax = plt.subplots()
     sns.countplot(x=y, palette=["red", "green"], ax=ax)
     ax.set_xticklabels(["Negative", "Positive"])
-    st.pyplot(fig)
-    
-    st.subheader("Feature Importance from Model")
-    importances = model.feature_importances_
-    feature_names = X.columns
-    feat_imp_df = pd.DataFrame({"Feature": feature_names, "Importance": importances})
-    feat_imp_df = feat_imp_df.sort_values(by="Importance", ascending=False)
-    
-    fig, ax = plt.subplots()
-    sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
 else:
     st.write("Please upload the required CSV file.")
