@@ -39,11 +39,7 @@ grid_search = GridSearchCV(rf, param_grid, scoring='f1', cv=5)
 
  
 
-# Explainability using SHAP
-explainer = shap.Explainer(best_rf, X_train)
-shap_values = explainer(X_test)
-shap.summary_plot(shap_values, X_test, show=False)
-plt.savefig("shap_summary.png")
+ 
 
 # Function to Generate Suggestions
 def generate_suggestions(prediction_prob):
