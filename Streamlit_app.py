@@ -32,7 +32,7 @@ param_grid = {'n_estimators': [50, 100, 150], 'max_depth': [3, 5, 7]}
 grid_search = GridSearchCV(rf, param_grid, scoring='f1', cv=5)
 
 # Best Model Selection
-best_rf = grid_search.best_estimator_
+ 
 
 # Model Evaluation
 y_pred = best_rf.predict(X_test)
