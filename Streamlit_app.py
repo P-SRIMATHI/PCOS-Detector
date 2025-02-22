@@ -17,7 +17,7 @@ from fpdf import FPDF
 
 # Load API Key securely
 load_dotenv()
-openai.api_key = os.getenv("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")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @st.cache_data
 def load_data():
@@ -66,27 +66,29 @@ def generate_report(prediction_prob):
     
     if prediction_prob > 0.5:
         pdf.multi_cell(0, 10, "Based on your input, there is a high probability of PCOS. Below are some personalized recommendations:")
-        pdf.ln(5)
-        pdf.multi_cell(0, 10, "Diet Plan:")
-        pdf.multi_cell(0, 10, "- Include more fiber and protein in your diet.")
-        pdf.multi_cell(0, 10, "- Avoid processed and sugary foods.")
-        pdf.multi_cell(0, 10, "- Increase omega-3 fatty acids intake (flaxseeds, walnuts, fish).")
-        
-        pdf.ln(5)
-        pdf.multi_cell(0, 10, "Exercise Recommendations:")
-        pdf.multi_cell(0, 10, "- Engage in at least 30 minutes of moderate exercise daily.")
-        pdf.multi_cell(0, 10, "- Strength training and yoga are beneficial.")
-        
-        pdf.ln(5)
-        pdf.multi_cell(0, 10, "Lifestyle Changes:")
-        pdf.multi_cell(0, 10, "- Manage stress through meditation and adequate sleep.")
-        pdf.multi_cell(0, 10, "- Maintain a healthy sleep cycle.")
-        pdf.multi_cell(0, 10, "- Stay hydrated and avoid excessive caffeine.")
     else:
-        pdf.multi_cell(0, 10, "No significant risk of PCOS detected. Continue maintaining a balanced lifestyle.")
+        pdf.multi_cell(0, 10, "No significant risk of PCOS detected. However, here are some general health tips:")
+    
+    pdf.ln(5)
+    pdf.multi_cell(0, 10, "Diet Plan:")
+    pdf.multi_cell(0, 10, "- Include more fiber and protein in your diet.")
+    pdf.multi_cell(0, 10, "- Avoid processed and sugary foods.")
+    pdf.multi_cell(0, 10, "- Increase omega-3 fatty acids intake (flaxseeds, walnuts, fish).")
+    
+    pdf.ln(5)
+    pdf.multi_cell(0, 10, "Exercise Recommendations:")
+    pdf.multi_cell(0, 10, "- Engage in at least 30 minutes of moderate exercise daily.")
+    pdf.multi_cell(0, 10, "- Strength training and yoga are beneficial.")
+    
+    pdf.ln(5)
+    pdf.multi_cell(0, 10, "Lifestyle Changes:")
+    pdf.multi_cell(0, 10, "- Manage stress through meditation and adequate sleep.")
+    pdf.multi_cell(0, 10, "- Maintain a healthy sleep cycle.")
+    pdf.multi_cell(0, 10, "- Stay hydrated and avoid excessive caffeine.")
     
     report_path = "PCOS_Report.pdf"
     pdf.output(report_path)
+    st.success("Report generated successfully!")
     return report_path
 
 if df is not None:
@@ -114,11 +116,12 @@ if df is not None:
         st.write("### Prediction:")
         if prediction == 1:
             st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
-            report_path = generate_report(prediction_prob)
-            with open(report_path, "rb") as file:
-                st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
+        
+        report_path = generate_report(prediction_prob)
+        with open(report_path, "rb") as file:
+            st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
     
     st.subheader("PCOS Case Distribution")
     fig, ax = plt.subplots()
