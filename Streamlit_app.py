@@ -85,7 +85,7 @@ def generate_pdf_report(y_test, y_pred, y_probs, filename="PCOS_Report.pdf"):
     print("PDF Report Generated!")
 
 # Generate Report
-generate_pdf_report(y_test, y_pred, y_probs)
+ 
 
 # Voice Assistant for PCOS-related Queries
 def voice_assistant():
