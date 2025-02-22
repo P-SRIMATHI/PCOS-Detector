@@ -14,25 +14,6 @@ from fpdf import FPDF
 
 # Load Dataset (Replace with actual file path)
 df = pd.read_csv("PCOS_data.csv")
-
-# Preprocessing: Handling missing values
-df = df.apply(pd.to_numeric, errors='coerce')  # Convert all to numeric
-df.fillna(df.median(numeric_only=True), inplace=True)
-
-# Standardizing column names to avoid KeyError
-df.columns = df.columns.str.strip()
-
-# Checking actual column names
-print(df.columns)
-
-# Replace target column name with correct one
-target_column = "PCOS (Yes/No)"  # Adjust this based on actual dataset
-if target_column not in df.columns:
-    raise KeyError(f"Column '{target_column}' not found in dataset. Available columns: {df.columns.tolist()}")
-
-X = df.drop(columns=[target_column])
-y = df[target_column]
-
 # Feature Scaling
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
