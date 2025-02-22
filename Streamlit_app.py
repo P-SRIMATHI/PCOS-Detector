@@ -16,7 +16,8 @@ from fpdf import FPDF
 df = pd.read_csv("PCOS_data.csv")
 
 # Preprocessing: Handling missing values
-df.fillna(df.median(), inplace=True)
+df = df.apply(pd.to_numeric, errors='coerce')  # Convert all to numeric
+df.fillna(df.median(numeric_only=True), inplace=True)
 
 # Splitting features & target
 X = df.drop(columns=['PCOS Diagnosis'])  # Replace with actual target column name
@@ -47,41 +48,43 @@ best_rf = grid_search.best_estimator_
 
 # Model Evaluation
 y_pred = best_rf.predict(X_test)
+y_probs = best_rf.predict_proba(X_test)[:, 1]
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("Classification Report:\n", classification_report(y_test, y_pred))
-print("AUC-ROC Score:", roc_auc_score(y_test, best_rf.predict_proba(X_test)[:,1]))
+print("AUC-ROC Score:", roc_auc_score(y_test, y_probs))
 
 # Precision-Recall Curve
-y_probs = best_rf.predict_proba(X_test)[:, 1]
 precision, recall, _ = precision_recall_curve(y_test, y_probs)
 plt.plot(recall, precision, marker='.')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.title('Precision-Recall Curve')
+plt.savefig("precision_recall_curve.png")
 plt.show()
 
 # Explainability using SHAP
 explainer = shap.Explainer(best_rf, X_train)
 shap_values = explainer(X_test)
-shap.summary_plot(shap_values, X_test)
+shap.summary_plot(shap_values, X_test, show=False)
+plt.savefig("shap_summary.png")
 
 # Function to Generate Suggestions
 def generate_suggestions(prediction_prob):
     if prediction_prob > 0.7:
-        return "High risk: Consider consulting a gynecologist. Focus on a healthy diet, exercise, and regular check-ups."
+        return "High risk: Consult a gynecologist. Focus on a healthy diet, exercise, and regular check-ups."
     elif prediction_prob > 0.4:
         return "Moderate risk: Maintain a balanced diet and active lifestyle. Monitor symptoms and consider medical consultation."
     else:
-        return "Low risk: Keep up with healthy habits. Regular monitoring is still recommended."
+        return "Low risk: Keep up with healthy habits. Regular monitoring is recommended."
 
 # Function to Generate Lifestyle & Diet Plan
 def generate_lifestyle_plan(prediction_prob):
     if prediction_prob > 0.7:
-        return "Recommended: Low-GI foods, high-fiber diet, regular exercise (strength & cardio), stress management."
+        return "Low-GI foods, high-fiber diet, regular exercise (strength & cardio), stress management."
     elif prediction_prob > 0.4:
-        return "Recommended: Balanced diet with lean protein, healthy fats, moderate carbs, and light exercise."
+        return "Balanced diet with lean protein, healthy fats, moderate carbs, and light exercise."
     else:
-        return "Recommended: Maintain a healthy diet with portion control and stay active."
+        return "Maintain a healthy diet with portion control and stay active."
 
 # Generate PDF Report
 def generate_pdf_report(y_test, y_pred, y_probs, filename="PCOS_Report.pdf"):
@@ -94,11 +97,12 @@ def generate_pdf_report(y_test, y_pred, y_probs, filename="PCOS_Report.pdf"):
     
     # Adding Prediction Results
     pdf.cell(200, 10, txt=f"AUC-ROC Score: {roc_auc_score(y_test, y_probs):.2f}", ln=True)
-    pdf.cell(200, 10, txt=f"Classification Report:\n{classification_report(y_test, y_pred)}", ln=True)
+    pdf.cell(200, 10, txt="Classification Report:", ln=True)
+    pdf.multi_cell(0, 10, txt=classification_report(y_test, y_pred))
     pdf.ln(10)
     
     # Adding Suggestion & Lifestyle Plan
-    for idx, prob in enumerate(y_probs[:5]):  # Limit to 5 examples for brevity
+    for idx, prob in enumerate(y_probs[:5]):  # Limit to 5 examples
         pdf.cell(200, 10, txt=f"Sample {idx+1}: Risk Score = {prob:.2f}", ln=True)
         pdf.cell(200, 10, txt=f"Suggestion: {generate_suggestions(prob)}", ln=True)
         pdf.cell(200, 10, txt=f"Lifestyle & Diet Plan: {generate_lifestyle_plan(prob)}", ln=True)
