@@ -12,8 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# Set up OpenAI client
-client = openai.OpenAI()
+# Set up OpenAI API Key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @st.cache_data
 def load_data():
@@ -76,19 +76,8 @@ if df is not None:
         st.write("### Prediction:")
         if prediction == 1:
             st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
-            st.write("### Analysis and Suggestions:")
-            st.write("- PCOS is a hormonal disorder common among women of reproductive age.")
-            st.write("- Symptoms include irregular periods, weight gain, and acne.")
-            st.write("- It can lead to complications like infertility and metabolic disorders.")
-            st.write("### Recommendations:")
-            st.write("- Maintain a balanced diet and exercise regularly.")
-            st.write("- Consult a gynecologist for further evaluation.")
-            st.write("- Monitor blood sugar and hormonal levels frequently.")
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
-            st.write("### General Analysis Report:")
-            st.write("- Your hormone levels are within the expected range.")
-            st.write("- Your weight and height are within the normal range.")
     
     # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
@@ -99,7 +88,7 @@ if df is not None:
         if isinstance(shap_values, list):
             shap_values = shap_values[1]  # Select the class index for PCOS predictions
         
-        if shap_values.shape[0] != X_test.shape[0] or shap_values.shape[1] != X_test.shape[1]:
+        if shap_values.shape != X_test.shape:
             st.error("Error: SHAP values matrix shape does not match data matrix.")
         else:
             fig, ax = plt.subplots()
@@ -130,12 +119,12 @@ if df is not None:
     if st.button("Get Answer"):
         if user_query:
             try:
-                response = client.chat.completions.create(
+                response = openai.ChatCompletion.create(
                     model="gpt-4",  # Updated API usage
                     messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
                               {"role": "user", "content": user_query}]
                 )
-                answer = response.choices[0].message.content  # Fixed response format
+                answer = response["choices"][0]["message"]["content"]  # Fixed response format
                 st.write("*Chatbot:*", answer)
             except Exception as e:
                 st.error(f"Chatbot error: {e}")
