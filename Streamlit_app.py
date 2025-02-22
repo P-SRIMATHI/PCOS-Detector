@@ -12,10 +12,11 @@ from dotenv import load_dotenv  # Load environment variables
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
+from fpdf import FPDF
 
 # Load API Key securely
 load_dotenv()
-openai.api_key = os.getenv("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")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @st.cache_data
 def load_data():
@@ -52,6 +53,38 @@ def preprocess_data(df):
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
 
+def generate_report(prediction_prob):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, "PCOS Detection Report", ln=True, align='C')
+    pdf.ln(10)
+    
+    if prediction_prob > 0.6:
+        pdf.multi_cell(0, 10, "Based on your input, there is a high probability of PCOS. Below are some personalized recommendations:")
+        pdf.ln(5)
+        pdf.multi_cell(0, 10, "Diet Plan:")
+        pdf.multi_cell(0, 10, "- Include more fiber and protein in your diet.")
+        pdf.multi_cell(0, 10, "- Avoid processed and sugary foods.")
+        pdf.multi_cell(0, 10, "- Increase omega-3 fatty acids intake (flaxseeds, walnuts, fish).")
+        
+        pdf.ln(5)
+        pdf.multi_cell(0, 10, "Exercise Recommendations:")
+        pdf.multi_cell(0, 10, "- Engage in at least 30 minutes of moderate exercise daily.")
+        pdf.multi_cell(0, 10, "- Strength training and yoga are beneficial.")
+        
+        pdf.ln(5)
+        pdf.multi_cell(0, 10, "Lifestyle Changes:")
+        pdf.multi_cell(0, 10, "- Manage stress through meditation and adequate sleep.")
+        pdf.multi_cell(0, 10, "- Maintain a healthy sleep cycle.")
+        pdf.multi_cell(0, 10, "- Stay hydrated and avoid excessive caffeine.")
+    else:
+        pdf.multi_cell(0, 10, "No significant risk of PCOS detected. Continue maintaining a balanced lifestyle.")
+    
+    report_path = "PCOS_Report.pdf"
+    pdf.output(report_path)
+    return report_path
+
 if df is not None:
     X, y, scaler, feature_columns = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
@@ -77,6 +110,9 @@ if df is not None:
         st.write("### Prediction:")
         if prediction == 1:
             st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
+            report_path = generate_report(prediction_prob)
+            with open(report_path, "rb") as file:
+                st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
     
@@ -106,23 +142,5 @@ if df is not None:
     fig, ax = plt.subplots()
     sns.barplot(x=feat_imp_df["Importance"], y=feat_imp_df["Feature"], ax=ax)
     st.pyplot(fig)
-    
-    st.subheader("💬 PCOS Chatbot")
-    user_query = st.text_input("Ask me anything about PCOS:")
-    if st.button("Get Answer"):
-        if user_query:
-            try:
-                client = openai.OpenAI()
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
-                              {"role": "user", "content": user_query}]
-                )
-                answer = response.choices[0].message.content
-                st.write("*Chatbot:*", answer)
-            except Exception as e:
-                st.error(f"Chatbot error: {e}")
-        else:
-            st.warning("Please enter a question before clicking Get Answer.")
 else:
     st.write("Please upload the required CSV file.")
