@@ -12,8 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# Set up OpenAI API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Set up OpenAI API Key (Replace with actual key)
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
 @st.cache_data
 def load_data():
@@ -76,20 +76,27 @@ if df is not None:
         st.write("### Prediction:")
         if prediction == 1:
             st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
+            st.write("### Analysis and Suggestions:")
+            st.write("- PCOS is a hormonal disorder common among women of reproductive age.")
+            st.write("- Symptoms include irregular periods, weight gain, and acne.")
+            st.write("- It can lead to complications like infertility and metabolic disorders.")
+            st.write("### Recommendations:")
+            st.write("- Maintain a balanced diet and exercise regularly.")
+            st.write("- Consult a gynecologist for further evaluation.")
+            st.write("- Monitor blood sugar and hormonal levels frequently.")
         else:
             st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
+            st.write("### General Analysis Report:")
+            st.write("- Your hormone levels are within the expected range.")
+            st.write("- Your weight and height are within the normal range.")
     
     # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
-    try:
-        explainer = shap.Explainer(model, X_train)  # Updated for SHAP compatibility
-        shap_values = explainer(X_test)  # Newer SHAP format
-
-        fig, ax = plt.subplots()
-        shap.summary_plot(shap_values, X_test, show=False)
-        st.pyplot(fig)
-    except Exception as e:
-        st.error(f"SHAP calculation error: {e}")
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test, check_additivity=False)  # Disable additivity check
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values[1], X_test, show=False)
+    st.pyplot(fig)
     
     st.subheader("PCOS Case Distribution")
     fig, ax = plt.subplots()
@@ -112,18 +119,13 @@ if df is not None:
     user_query = st.text_input("Ask me anything about PCOS:")
     if st.button("Get Answer"):
         if user_query:
-            try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
-                        {"role": "user", "content": user_query}
-                    ]
-                )
-                answer = response["choices"][0]["message"]["content"]
-                st.write("*Chatbot:*", answer)
-            except Exception as e:
-                st.error(f"Chatbot error: {e}")
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
+                          {"role": "user", "content": user_query}]
+            )
+            answer = response["choices"][0]["message"]["content"]
+            st.write("*Chatbot:*", answer)
         else:
             st.warning("Please enter a question before clicking Get Answer.")
 else:
