@@ -12,8 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# Set up OpenAI API Key (Replace with actual key)
-openai.api_key = "YOUR_OPENAI_API_KEY"
+# Set up OpenAI client
+client = openai.OpenAI()
 
 @st.cache_data
 def load_data():
@@ -92,15 +92,21 @@ if df is not None:
     
     # Display Graphs After Prediction
     st.subheader("Feature Importance (SHAP Values)")
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test)
-    
-    if isinstance(shap_values, list):
-        shap_values = shap_values[1]  # Select the class index for PCOS predictions
-    
-    fig, ax = plt.subplots()
-    shap.summary_plot(shap_values, X_test, show=False)
-    st.pyplot(fig)
+    try:
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test)
+        
+        if isinstance(shap_values, list):
+            shap_values = shap_values[1]  # Select the class index for PCOS predictions
+        
+        if shap_values.shape[0] != X_test.shape[0] or shap_values.shape[1] != X_test.shape[1]:
+            st.error("Error: SHAP values matrix shape does not match data matrix.")
+        else:
+            fig, ax = plt.subplots()
+            shap.summary_plot(shap_values, X_test, show=False)
+            st.pyplot(fig)
+    except Exception as e:
+        st.error(f"SHAP calculation error: {e}")
     
     st.subheader("PCOS Case Distribution")
     fig, ax = plt.subplots()
@@ -123,13 +129,16 @@ if df is not None:
     user_query = st.text_input("Ask me anything about PCOS:")
     if st.button("Get Answer"):
         if user_query:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
-                          {"role": "user", "content": user_query}]
-            )
-            answer = response["choices"][0]["message"]["content"]
-            st.write("*Chatbot:*", answer)
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4",  # Updated API usage
+                    messages=[{"role": "system", "content": "You are a helpful assistant specialized in PCOS-related topics."},
+                              {"role": "user", "content": user_query}]
+                )
+                answer = response.choices[0].message.content  # Fixed response format
+                st.write("*Chatbot:*", answer)
+            except Exception as e:
+                st.error(f"Chatbot error: {e}")
         else:
             st.warning("Please enter a question before clicking Get Answer.")
 else:
