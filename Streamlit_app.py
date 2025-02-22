@@ -22,7 +22,6 @@ smote = SMOTE(sampling_strategy=0.8, random_state=42)
 
 
 # Splitting data into train & test sets
-X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
 
 # Model Training: Random Forest & XGBoost
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
