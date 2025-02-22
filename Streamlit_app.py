@@ -30,7 +30,6 @@ xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
 # Hyperparameter tuning
 param_grid = {'n_estimators': [50, 100, 150], 'max_depth': [3, 5, 7]}
 grid_search = GridSearchCV(rf, param_grid, scoring='f1', cv=5)
-grid_search.fit(X_train, y_train)
 
 # Best Model Selection
 best_rf = grid_search.best_estimator_
