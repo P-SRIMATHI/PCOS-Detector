@@ -37,11 +37,18 @@ df = load_data()
 
 def preprocess_data(df):
     df.columns = df.columns.str.replace(" ", "_")
-    required_columns = [col for col in df.columns if "betaHCG" in col or "AMH" in col]
-    if len(required_columns) < 3:
-        raise KeyError(f"Required features missing! Found: {required_columns}")
+    potential_columns = [col for col in df.columns if "betaHCG" in col or "AMH" in col]
     
-    X = df[required_columns]
+    if len(potential_columns) >= 3:
+        selected_columns = potential_columns[:3]  # Select the first three available
+    else:
+        alternative_columns = ["FSH_mIUmL", "LH_mIUmL", "TSH_mIUL"]  # Alternative biomarkers
+        selected_columns = [col for col in alternative_columns if col in df.columns]
+    
+    if len(selected_columns) < 3:
+        raise KeyError(f"Required features missing! Found: {selected_columns}")
+    
+    X = df[selected_columns]
     y = df["PCOS_YN"].astype(int)
     
     X = X.apply(pd.to_numeric, errors='coerce')
@@ -53,7 +60,7 @@ def preprocess_data(df):
     smote = SMOTE(random_state=42)
     X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
     
-    return pd.DataFrame(X_resampled, columns=X.columns), y_resampled, scaler, required_columns
+    return pd.DataFrame(X_resampled, columns=X.columns), y_resampled, scaler, selected_columns
 
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
