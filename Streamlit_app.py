@@ -139,16 +139,18 @@ if df is not None:
         "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
         "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"]
     }
-    score = 0
+    
+    quiz_score = 0  # Initialize quiz score
     for question, options in questions.items():
         answer = st.radio(question, options)
         if answer == options[0]:
-            score += 1
-    st.write(f"Your final score: {score}/{len(questions)}")
-    st.session_state.score += score  # Update gamification score
+            quiz_score += 1
+    st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
+    
+    st.session_state.score += quiz_score  # Add quiz score to session score
 
-    # Display Gamification Score
-    st.write(f"Total Points: {st.session_state.score}")
+    # Display total points (Gamification)
+    st.write(f"Total Gamification Points: {st.session_state.score}")
 
     # Community Support: User can post questions and share experiences
     st.header("5. Community Support")
