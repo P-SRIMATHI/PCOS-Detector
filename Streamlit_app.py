@@ -97,7 +97,7 @@ if df is not None:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
     # AI-powered Alerts (based on model prediction)
-    st.header("AI-powered Alerts")
+    st.header("6. AI-powered Alerts")
     if 'prediction_prob' in locals():
         if prediction_prob > 0.8:
             st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
