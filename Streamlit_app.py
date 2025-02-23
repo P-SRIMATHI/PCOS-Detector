@@ -15,6 +15,12 @@ from fpdf import FPDF
 # Load API Key securely
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize session state variables for gamification and community
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "posts" not in st.session_state:
+    st.session_state.posts = []
+
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
 
@@ -131,3 +137,30 @@ if df is not None:
         if answer == options[0]:
             score += 1
     st.write(f"Your final score: {score}/{len(questions)}")
+    st.session_state.score += score  # Update gamification score
+
+    # Display Gamification Score
+    st.write(f"Total Points: {st.session_state.score}")
+
+    # Community Support: User can post questions and share experiences
+    st.header("5. Community Support")
+    new_post = st.text_area("Post your experience or ask a question:")
+    if st.button("Submit Post"):
+        if new_post:
+            st.session_state.posts.append(new_post)
+            st.success("Post submitted successfully!")
+        else:
+            st.warning("Please write something to post.")
+
+    # Display Community Posts
+    if st.session_state.posts:
+        st.write("### Community Posts:")
+        for idx, post in enumerate(st.session_state.posts, 1):
+            st.write(f"{idx}. {post}")
+    
+    # AI-powered Alerts (based on model prediction)
+    st.header("6. AI-powered Alerts")
+    if prediction_prob > 0.8:
+        st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
+    elif prediction_prob > 0.5:
+        st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
