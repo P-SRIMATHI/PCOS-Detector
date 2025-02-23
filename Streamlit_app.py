@@ -83,7 +83,8 @@ if df is not None:
         input_df = pd.DataFrame([user_input])
         prediction_proba = model.predict_proba(input_df)
 
-    if len(prediction_proba.shape) > 1 and prediction_proba.shape[1] > 1:
+    # Check if the model returns a probability distribution (2D array) or a single value (1D array)
+    if len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
         prediction_prob = prediction_proba[0][1]  # Probability of PCOS
     else:
         prediction_prob = prediction_proba[0]  # If only one probability value is returned
