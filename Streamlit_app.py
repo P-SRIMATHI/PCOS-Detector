@@ -146,8 +146,18 @@ if data_viz_button:
 # Handle Health Gamification Section
 if health_game_button:
     st.header("3. Health Gamification")
-    # Health gamification logic goes here, like tracking points, challenges, and rewards
-    st.write("Gamification features coming soon! Stay tuned.")
+    glasses_of_water = st.slider("Glasses of Water Consumed", 0, 12, 0)
+    steps_taken = st.slider("Steps Taken Today", 0, 10000, 0)
+
+    if glasses_of_water >= 8:
+        st.success("💧 You're well-hydrated! Keep it up!")
+    elif glasses_of_water >= 5:
+        st.info("💧 Good job on staying hydrated. Aim for 8 glasses for optimal health.")
+
+    if steps_taken >= 10000:
+        st.success("🏅 Congratulations on hitting your step goal!")
+    elif steps_taken >= 5000:
+        st.info("🏃 Nice! Keep moving to reach your 10,000 steps goal.")
 
 # Handle Trivia Quiz Section
 if trivia_quiz_button:
