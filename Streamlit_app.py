@@ -8,7 +8,7 @@ import shap
 import openai
 import speech_recognition as sr
 import pyttsx3
-from dotenv import load_dotenv  # Load environment variables
+from dotenv import load_dotenv
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -137,10 +137,21 @@ if df is not None:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
     
     st.header("2. Data Visualizations")
-    st.write("Graphs will be displayed here.")
+    for column in feature_columns:
+        fig, ax = plt.subplots()
+        sns.histplot(df[column], kde=True, ax=ax)
+        st.pyplot(fig)
     
     st.header("3. Chatbot")
-    st.write("Chatbot feature coming soon.")
+    st.write("Chatbot is under development.")
     
     st.header("4. Trivia Quiz")
-    st.write("Quiz related to PCOS.")
+    questions = {
+        "What is a common symptom of PCOS?": ["Irregular periods", "Frequent colds"],
+        "Which hormone is often imbalanced in PCOS?": ["Insulin", "Adrenaline"],
+        "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals"]
+    }
+    
+    for question, options in questions.items():
+        st.write(question)
+        st.radio("", options)
