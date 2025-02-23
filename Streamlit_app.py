@@ -37,26 +37,72 @@ def generate_report(prediction_prob):
     pdf.output(report_path)
     return report_path
 
-# Layout with clickable boxes (3 on top, 3 at the bottom)
-col1, col2, col3 = st.columns(3)
-with col1:
-    prediction_button = st.button("🔮 PCOS Prediction")
-with col2:
-    data_viz_button = st.button("📊 Data Visualization")
-with col3:
-    health_game_button = st.button("🎮 Health Gamification")
+# Streamlit UI
+st.title("Welcome to the PCOS Prediction App")  # Add the welcome title
 
+# Display 6 clickable boxes for sections
+col1, col2, col3 = st.columns(3)
 col4, col5, col6 = st.columns(3)
+
+with col1:
+    data_viz_button = st.button("2. Data Visualization 📊")
+with col2:
+    health_game_button = st.button("3. Health Gamification 🎮")
+with col3:
+    st.button("1. PCOS Prediction 🤖")
 with col4:
-    trivia_quiz_button = st.button("🧠 Trivia Quiz")
+    trivia_button = st.button("4. Trivia Quiz ❓")
 with col5:
-    support_button = st.button("💬 Community Support")
+    support_button = st.button("5. Community Support 💬")
 with col6:
-    chatbot_button = st.button("🤖 Chatbot")
+    chatbot_button = st.button("6. Chatbot 🤖")
+
+# Track water intake and steps in gamification
+if health_game_button:
+    st.title("Health Gamification")
+    st.header("Track Your Progress and Earn Points!")
+    
+    # Initialize session state variables for gamification
+    if "health_points" not in st.session_state:
+        st.session_state.health_points = 0
+    if "water_intake" not in st.session_state:
+        st.session_state.water_intake = 0
+    if "steps_walked" not in st.session_state:
+        st.session_state.steps_walked = 0
+
+    # Track Water Intake
+    st.subheader("Track Your Water Intake")
+    water_glasses = st.slider("How many glasses of water did you drink today?", min_value=0, max_value=15)
+    st.session_state.water_intake = water_glasses
+
+    # Reward for Drinking Water
+    if st.session_state.water_intake >= 8:
+        st.session_state.health_points += 10
+        st.success("Great job! You've completed your water intake goal! +10 points")
+    else:
+        st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
+
+    # Track Steps
+    st.subheader("Track Your Steps")
+    steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
+    st.session_state.steps_walked = steps
+
+    # Reward for Walking Steps
+    if st.session_state.steps_walked >= 10000:
+        st.session_state.health_points += 20
+        st.success("Amazing! You've reached 10,000 steps! +20 points")
+    else:
+        st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
+
+    # Display Total Health Points
+    st.write(f"Total Health Points: {st.session_state.health_points}")
+
+    # Challenge Participation
+    if st.session_state.health_points >= 50:
+        st.balloons()
 
 # Handle Prediction Section
-if prediction_button:
-    st.header("1. PCOS Prediction")
+if st.button("1. PCOS Prediction 🤖"):
     weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
     height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
     bmi = calculate_bmi(weight, height)
@@ -74,7 +120,7 @@ if prediction_button:
     if df is not None:
         possible_features = ["AMH", "betaHCG", "FSH"]
         selected_features = [col for col in df.columns if any(feature in col for feature in possible_features)]
-        
+
         if not selected_features:
             st.error("None of the selected features are found in the dataset! Please check column names.")
             st.write("Columns in dataset:", df.columns.tolist())
@@ -86,10 +132,10 @@ if prediction_button:
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
-        
+
         smote = SMOTE(random_state=42)
         X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
-        
+
         X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
         model = RandomForestClassifier(n_estimators=200, random_state=42)
         model.fit(X_train, y_train)
@@ -100,21 +146,19 @@ if prediction_button:
             input_df = pd.DataFrame([user_input])
             prediction_proba = model.predict_proba(input_df)
 
-            # Check if prediction_proba is a NumPy array and has a shape attribute
             if isinstance(prediction_proba, np.ndarray) and len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
-                prediction_prob = prediction_proba[0][1]  # Probability of PCOS
+                prediction_prob = prediction_proba[0][1]
             else:
-                prediction_prob = prediction_proba[0]  # If only one probability value is returned
+                prediction_prob = prediction_proba[0]
 
             prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
             st.success(prediction)
-            
-            # Generate and provide download link for the report
+
             report_path = generate_report(prediction_prob)
             with open(report_path, "rb") as file:
                 st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
-            # AI-powered Alerts (based on model prediction)
+            # AI-powered Alerts
             st.header("AI-powered Alerts")
             if prediction_prob > 0.8:
                 st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
@@ -124,51 +168,41 @@ if prediction_button:
 # Handle Data Visualization Section
 if data_viz_button:
     st.header("2. Data Visualizations")
+    
+    # Case Distribution - Count Plot
     st.subheader("Case Distribution")
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set figure size for better visibility
     sns.countplot(x=y, ax=ax)
     ax.set_xticklabels(["No PCOS", "PCOS"])
-    st.pyplot(fig)
+    st.pyplot(fig)  # Display plot
 
+    # Feature Importance - Bar Plot
     st.subheader("Feature Importance")
     feature_importances = model.feature_importances_
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set figure size for better visibility
     sns.barplot(x=selected_features, y=feature_importances, ax=ax)
-    st.pyplot(fig)
+    ax.set_ylabel("Importance")
+    st.pyplot(fig)  # Display plot
 
+    # SHAP Model Impact - SHAP Summary Plot
     st.subheader("SHAP Model Impact")
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_test)
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set figure size for better visibility
     shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
-    st.pyplot(fig)
-
-# Handle Health Gamification Section
-if health_game_button:
-    st.header("3. Health Gamification")
-    glasses_of_water = st.slider("Glasses of Water Consumed", 0, 12, 0)
-    steps_taken = st.slider("Steps Taken Today", 0, 10000, 0)
-
-    if glasses_of_water >= 8:
-        st.success("💧 You're well-hydrated! Keep it up!")
-    elif glasses_of_water >= 5:
-        st.info("💧 Good job on staying hydrated. Aim for 8 glasses for optimal health.")
-
-    if steps_taken >= 10000:
-        st.success("🏅 Congratulations on hitting your step goal!")
-    elif steps_taken >= 5000:
-        st.info("🏃 Nice! Keep moving to reach your 10,000 steps goal.")
+    st.pyplot(fig)  # Display plot
 
 # Handle Trivia Quiz Section
-if trivia_quiz_button:
+if trivia_button:
     st.header("4. Trivia Quiz")
     questions = {
         "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
         "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
-        "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"]
+        "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"],
+        "Which condition often occurs alongside PCOS?": ["Obesity", "Hypertension", "Cystic fibrosis"]
     }
 
-    quiz_score = 0  # Initialize quiz score
+    quiz_score = 0
     for question, options in questions.items():
         answer = st.radio(question, options)
         if answer == options[0]:
@@ -186,8 +220,7 @@ if support_button:
             st.success("Post submitted successfully!")
         else:
             st.warning("Please write something to post.")
-    
-    # Display Community Posts
+
     if st.session_state.posts:
         st.write("### Community Posts:")
         for idx, post in enumerate(st.session_state.posts, 1):
