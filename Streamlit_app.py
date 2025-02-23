@@ -39,18 +39,27 @@ def preprocess_data(df):
     df.columns = df.columns.str.replace(" ", "_")
     potential_columns = [col for col in df.columns if "betaHCG" in col or "AMH" in col]
     
-    if len(potential_columns) >= 3:
-        selected_columns = potential_columns[:3]  # Select the first three available
+    if len(potential_columns) < 3:
+        alternative_columns = ["FSH_mIUmL", "LH_mIUmL", "TSH_mIUL", "PRL_ngmL", "Vit_D3_ngmL"]
+        selected_columns = potential_columns + [col for col in alternative_columns if col in df.columns]
     else:
-        alternative_columns = ["FSH_mIUmL", "LH_mIUmL", "TSH_mIUL"]  # Alternative biomarkers
-        selected_columns = [col for col in alternative_columns if col in df.columns]
+        selected_columns = potential_columns[:3]
     
     if len(selected_columns) < 3:
-        raise KeyError(f"Required features missing! Found: {selected_columns}")
+        st.warning(f"Using alternative features: {selected_columns}")
     
     X = df[selected_columns]
-    y = df["PCOS_YN"].astype(int)
     
+    y_column = "PCOS_YN"
+    if y_column not in df.columns:
+        for alt_col in ["PCOS", "PCOS_(Y/N)"]:
+            if alt_col in df.columns:
+                y_column = alt_col
+                break
+        else:
+            raise KeyError("No suitable PCOS target variable found!")
+    
+    y = df[y_column].astype(int)
     X = X.apply(pd.to_numeric, errors='coerce')
     X.fillna(X.median(), inplace=True)
     
