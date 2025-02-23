@@ -139,3 +139,24 @@ if df is not None:
         report_path = generate_report(prediction_prob)
         with open(report_path, "rb") as file:
             st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
+    
+    # Trivia Quiz
+    st.header("Trivia Quiz")
+    questions = {
+        "What hormone is commonly imbalanced in PCOS?": "Testosterone",
+        "What is a common symptom of PCOS?": "Irregular periods",
+        "Which lifestyle change can help manage PCOS?": "Regular exercise"
+    }
+    for question, answer in questions.items():
+        user_answer = st.radio(question, [answer, "Wrong Answer"])
+        if user_answer == answer:
+            st.success("Correct!")
+        else:
+            st.error("Incorrect. Try again!")
+    
+    # SHAP Graph
+    explainer = shap.Explainer(model, X_train)
+    shap_values = explainer(X_test)
+    st.header("SHAP Value Plot")
+    shap.summary_plot(shap_values, X_test)
+    st.pyplot()
