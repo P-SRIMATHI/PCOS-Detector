@@ -137,7 +137,7 @@ if df is not None:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
     
     st.header("2. Data Visualizations")
-    for column in feature_columns:
+    for column in feature_columns[:3]:
         fig, ax = plt.subplots()
         sns.histplot(df[column], kde=True, ax=ax)
         st.pyplot(fig)
@@ -146,10 +146,14 @@ if df is not None:
     st.text_input("Ask me anything about PCOS:")
     
     st.header("4. Trivia Quiz")
+    score = 0
     questions = {
-        "What is a common symptom of PCOS?": ["Irregular periods", "Frequent colds"],
-        "Which hormone is often imbalanced in PCOS?": ["Insulin", "Adrenaline"],
-        "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals"]
+        "What is a common symptom of PCOS?": "Irregular periods",
+        "Which hormone is often imbalanced in PCOS?": "Insulin",
+        "What lifestyle change can help manage PCOS?": "Regular exercise"
     }
-    for question, options in questions.items():
-        st.radio(question, options)
+    for question, correct_answer in questions.items():
+        answer = st.radio(question, [correct_answer, "Wrong Answer"])
+        if answer == correct_answer:
+            score += 1
+    st.write(f"Your final score: {score}/{len(questions)}")
