@@ -140,21 +140,15 @@ if df is not None:
         with open(report_path, "rb") as file:
             st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
     
-    # Trivia Quiz
-    st.header("Trivia Quiz")
-    questions = {
-        "What hormone is commonly imbalanced in PCOS?": ["Testosterone", "Estrogen", "Progesterone"],
-        "What is a common symptom of PCOS?": ["Irregular periods", "High blood pressure", "Low blood sugar"],
-        "Which lifestyle change can help manage PCOS?": ["Regular exercise", "Increased caffeine intake", "Skipping meals"]
-    }
-    for question, options in questions.items():
-        user_answer = st.radio(question, options)
-        if user_answer == options[0]:
-            st.success("Correct!")
-        else:
-            st.error("Incorrect. Try again!")
+    # Display chatbot
+    st.header("PCOS Chatbot")
+    st.write("Ask me anything about PCOS!")
+    user_question = st.text_input("Your Question:")
+    if user_question:
+        response = openai.Completion.create(engine="text-davinci-003", prompt=user_question, max_tokens=100)
+        st.write(response["choices"][0]["text"].strip())
     
-    # SHAP Value Plot
+    # Display SHAP values
     explainer = shap.Explainer(model, X_train)
     shap_values = explainer(X_test)
     st.header("SHAP Value Plot")
