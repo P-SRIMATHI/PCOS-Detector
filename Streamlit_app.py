@@ -21,9 +21,9 @@ if "score" not in st.session_state:
 if "posts" not in st.session_state:
     st.session_state.posts = []
 if "moods" not in st.session_state:
-    st.session_state.moods = []  # Track moods for mood tracker
+    st.session_state.moods = []
 if "recipes" not in st.session_state:
-    st.session_state.recipes = []  # Store selected recipes for future reference
+    st.session_state.recipes = []
 
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
@@ -104,7 +104,7 @@ if st.button("Submit Prediction"):
     with open(report_path, "rb") as file:
         st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
-    # AI-powered Alerts
+    # AI-powered Alerts (based on model prediction)
     st.header("AI-powered Alerts")
     if prediction_prob > 0.8:
         st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
@@ -147,18 +147,18 @@ st.session_state.water_intake = water_glasses
 
 # Reward for Drinking Water
 if st.session_state.water_intake >= 8:
-    st.session_state.health_points += 10
+    st.session_state.health_points += 10  # Give points for completing water goal
     st.success("Great job! You've completed your water intake goal! +10 points")
 else:
     st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
 
-# Track Steps
+# Track Steps (example challenge)
 steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
 st.session_state.steps_walked = steps
 
 # Reward for Walking Steps
 if st.session_state.steps_walked >= 10000:
-    st.session_state.health_points += 20
+    st.session_state.health_points += 20  # Give points for walking 10,000 steps
     st.success("Amazing! You've reached 10,000 steps! +20 points")
 else:
     st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
@@ -166,31 +166,8 @@ else:
 # Display Total Health Points
 st.write(f"Total Health Points: {st.session_state.health_points}")
 
-# Mood Tracker Section
-st.header("4. Mood Tracker 😊")
-mood = st.selectbox("How are you feeling today?", ["Happy", "Sad", "Anxious", "Neutral", "Excited"])
-st.session_state.moods.append(mood)
-
-# Display Mood History
-st.write("### Mood History")
-if st.session_state.moods:
-    mood_df = pd.DataFrame(st.session_state.moods, columns=["Mood"])
-    st.write(mood_df)
-
-# PCOS Recipes Section
-st.header("5. PCOS Recipes 🍳")
-recipes = [
-    "1. High-Protein Salad: Kale, chickpeas, avocado, olive oil.",
-    "2. Anti-inflammatory Smoothie: Berries, spinach, almond milk.",
-    "3. PCOS-Friendly Breakfast: Oats, chia seeds, almond butter.",
-]
-
-for recipe in recipes:
-    st.write(recipe)
-    st.session_state.recipes.append(recipe)
-
 # Community Support: User can post questions and share experiences
-st.header("6. Community Support 💬")
+st.header("4. Community Support 💬")
 new_post = st.text_area("Post your experience or ask a question:")
 if st.button("Submit Post"):
     if new_post:
@@ -206,25 +183,30 @@ if st.session_state.posts:
         st.write(f"{idx}. {post}")
 
 # Chatbot Section
-st.header("7. Chatbot 🤖")
+st.header("5. Chatbot 🤖")
 user_question = st.text_input("Ask me anything about PCOS:")
 if user_question:
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
     st.write(response["choices"][0]["message"]["content"])
 
-# Trivia Quiz Section
-st.header("8. Trivia Quiz 🧠")
-questions = {
-    "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
-    "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
-    "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"]
-}
+# Mood Tracker Section
+st.header("6. Mood Tracker 😊")
+mood = st.selectbox("How are you feeling today?", ["Happy", "Sad", "Anxious", "Neutral", "Excited"])
+mood_notes = st.text_area("Add a note about your mood today (optional):")
+if st.button("Submit Mood"):
+    mood_data = {"Mood": mood, "Note": mood_notes, "Date": pd.to_datetime("today").strftime("%Y-%m-%d")}
+    st.session_state.moods.append(mood_data)
 
-quiz_score = 0  # Initialize quiz score
-for question, options in questions.items():
-    answer = st.radio(question, options)
-    if answer == options[0]:
-        quiz_score += 1
-st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
+# Display Mood History with Trend
+if st.session_state.moods:
+    mood_df = pd.DataFrame(st.session_state.moods)
+    st.write(mood_df)
 
-st.session_state.score += quiz_score  # Add quiz score to session score
+    # Plot Mood Trend (simplified version)
+    mood_df['Mood_Code'] = mood_df['Mood'].map({"Happy": 5, "Excited": 4, "Neutral": 3, "Sad": 2, "Anxious": 1})
+    mood_trend_fig = plt.figure(figsize=(10, 5))
+    plt.plot(mood_df['Date'], mood_df['Mood_Code'], marker='o', linestyle='-', color='b')
+    plt.title("Mood Trend Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Mood (Scale: 1-5)")
+    plt.xticks
