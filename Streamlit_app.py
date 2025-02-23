@@ -71,7 +71,8 @@ if df is not None:
     model = RandomForestClassifier(n_estimators=200, random_state=42)
     model.fit(X_train, y_train)
     
-    user_input = {col: st.number_input(f"{col}", value=float(X.iloc[:, i].mean())) for i, col in enumerate(selected_features)}
+    user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
+    
     if st.button("Submit Prediction"):
         input_df = pd.DataFrame([user_input])
         prediction_prob = model.predict_proba(input_df)[0][1]
