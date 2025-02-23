@@ -136,18 +136,17 @@ if df is not None:
         with open(report_path, "rb") as file:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
     
-    st.header("2. Data Visualizations")
-    for column in feature_columns:
-        fig, ax = plt.subplots()
-        sns.histplot(df[column], kde=True, ax=ax)
-        st.pyplot(fig)
+    st.header("3. Chatbot")
+    user_question = st.text_input("Ask me anything about PCOS:")
+    if user_question:
+        response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
+        st.write(response["choices"][0]["message"]["content"])
     
-    fig, ax = plt.subplots()
-    sns.countplot(x=y, ax=ax)
-    ax.set_title("PCOS Case Distribution")
-    st.pyplot(fig)
-    
-    fig, ax = plt.subplots()
-    sns.boxplot(data=df[feature_columns], ax=ax)
-    ax.set_title("Feature Distribution")
-    st.pyplot(fig)
+    st.header("4. Trivia Quiz")
+    questions = {"What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"], "Which hormone is often imbalanced in PCOS?": ["Insulin", "Testosterone", "Estrogen"]}
+    score = 0
+    for question, options in questions.items():
+        answer = st.radio(question, options)
+        if answer == options[0]:
+            score += 1
+    st.write(f"Your final score: {score}/{len(questions)}")
