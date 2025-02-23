@@ -117,13 +117,18 @@ if df is not None:
     st.title("PCOS Prediction App")
     
     st.header("1. PCOS Prediction")
-    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
-    height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
-    bmi = calculate_bmi(weight, height)
-    st.write(f"Calculated BMI: {bmi:.2f}")
+    user_input = {col: st.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
+    if st.button("Submit Prediction"):
+        input_df = pd.DataFrame([user_input])
+        input_df[feature_columns] = scaler.transform(input_df[feature_columns])
+        prediction_prob = model.predict_proba(input_df)[0][1]
+        prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
+        st.success(prediction)
+        report_path = generate_report(prediction_prob)
+        with open(report_path, "rb") as file:
+            st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
     
     st.header("2. Data Visualizations")
-    
     st.subheader("Feature Distributions")
     for column in feature_columns[:3]:
         fig, ax = plt.subplots()
@@ -148,10 +153,7 @@ if df is not None:
         st.write(response["choices"][0]["message"]["content"])
     
     st.header("4. Trivia Quiz")
-    questions = {
-        "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
-        "Which hormone is often imbalanced in PCOS?": ["Insulin", "Testosterone", "Estrogen"]
-    }
+    questions = {"What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"]}
     score = 0
     for question, options in questions.items():
         answer = st.radio(question, options)
