@@ -97,7 +97,7 @@ if df is not None:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
     # AI-powered Alerts (based on model prediction)
-    st.header("6. AI-powered Alerts")
+    st.header("AI-powered Alerts")
     if 'prediction_prob' in locals():
         if prediction_prob > 0.8:
             st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
@@ -149,9 +149,7 @@ if df is not None:
     
     st.session_state.score += quiz_score  # Add quiz score to session score
 
-    # Display total points (Gamification)
-    st.write(f"Total Gamification Points: {st.session_state.score}")
-
+    
     # Community Support: User can post questions and share experiences
     st.header("5. Community Support")
     new_post = st.text_area("Post your experience or ask a question:")
