@@ -188,7 +188,6 @@ user_question = st.text_input("Ask me anything about PCOS:")
 if user_question:
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
     st.write(response["choices"][0]["message"]["content"])
-
 # Mood Tracker Section
 st.header("6. Mood Tracker 😊")
 mood = st.selectbox("How are you feeling today?", ["Happy", "Sad", "Anxious", "Neutral", "Excited"])
@@ -202,11 +201,82 @@ if st.session_state.moods:
     mood_df = pd.DataFrame(st.session_state.moods)
     st.write(mood_df)
 
-    # Plot Mood Trend (simplified version)
-    mood_df['Mood_Code'] = mood_df['Mood'].map({"Happy": 5, "Excited": 4, "Neutral": 3, "Sad": 2, "Anxious": 1})
-    mood_trend_fig = plt.figure(figsize=(10, 5))
-    plt.plot(mood_df['Date'], mood_df['Mood_Code'], marker='o', linestyle='-', color='b')
-    plt.title("Mood Trend Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Mood (Scale: 1-5)")
-    plt.xticks
+    # Check if 'Mood' column exists before proceeding with mapping
+    if 'Mood' in mood_df.columns:
+        mood_df['Mood_Code'] = mood_df['Mood'].map({"Happy": 5, "Excited": 4, "Neutral": 3, "Sad": 2, "Anxious": 1})
+
+        # Plot Mood Trend (simplified version)
+        mood_trend_fig = plt.figure(figsize=(10, 5))
+        plt.plot(mood_df['Date'], mood_df['Mood_Code'], marker='o', linestyle='-', color='b')
+        plt.title("Mood Trend Over Time")
+        plt.xlabel("Date")
+        plt.ylabel("Mood (Scale: 1-5)")
+        plt.xticks(rotation=45)
+        st.pyplot(mood_trend_fig)
+    else:
+        st.warning("No mood data available yet.")
+# PCOS Recipes Section
+st.header("7. PCOS Recipes 🍲")
+
+# Sample Recipes (this can be expanded later with a real dataset or API)
+recipes = [
+    {
+        "name": "Low GI Salad",
+        "ingredients": ["Lettuce", "Tomatoes", "Cucumbers", "Olive Oil", "Lemon"],
+        "instructions": "Chop all ingredients and mix them together. Drizzle with olive oil and lemon juice for added flavor.",
+        "benefits": "Low glycemic index, helps in managing insulin levels and promotes overall health."
+    },
+    {
+        "name": "Avocado Toast",
+        "ingredients": ["Whole wheat bread", "Avocado", "Lemon juice", "Chili flakes", "Olive oil"],
+        "instructions": "Toast the bread, spread mashed avocado on top, drizzle with lemon juice and olive oil. Sprinkle chili flakes for extra flavor.",
+        "benefits": "Healthy fats, promotes balanced blood sugar levels and reduces inflammation."
+    },
+    {
+        "name": "Chia Pudding",
+        "ingredients": ["Chia seeds", "Almond milk", "Honey", "Vanilla extract", "Berries"],
+        "instructions": "Mix chia seeds with almond milk and refrigerate overnight. Top with honey, vanilla extract, and fresh berries.",
+        "benefits": "High in omega-3s, fiber, and antioxidants which support hormone balance and digestion."
+    }
+]
+
+# Display recipes
+for recipe in recipes:
+    st.subheader(recipe["name"])
+    st.write(f"**Ingredients:** {', '.join(recipe['ingredients'])}")
+    st.write(f"**Instructions:** {recipe['instructions']}")
+    st.write(f"**Health Benefits:** {recipe['benefits']}")
+    st.markdown("---")
+
+# Option for user to submit their own recipes
+st.subheader("Submit Your Own Recipe ✍️")
+recipe_name = st.text_input("Recipe Name")
+ingredients = st.text_area("Ingredients (comma separated)")
+instructions = st.text_area("Instructions")
+benefits = st.text_area("Health Benefits")
+
+if st.button("Submit Recipe"):
+    if recipe_name and ingredients and instructions and benefits:
+        new_recipe = {
+            "name": recipe_name,
+            "ingredients": ingredients.split(","),
+            "instructions": instructions,
+            "benefits": benefits
+        }
+        st.session_state.recipes.append(new_recipe)
+        st.success("Recipe submitted successfully! 🌟")
+    else:
+        st.warning("Please fill in all the fields before submitting.")
+        
+# Display user-submitted recipes
+if st.session_state.recipes:
+    st.write("### User-Submitted Recipes")
+    for recipe in st.session_state.recipes:
+        st.subheader(recipe["name"])
+        st.write(f"**Ingredients:** {', '.join(recipe['ingredients'])}")
+        st.write(f"**Instructions:** {recipe['instructions']}")
+        st.write(f"**Health Benefits:** {recipe['benefits']}")
+        st.markdown("---")
+
+
+ 
