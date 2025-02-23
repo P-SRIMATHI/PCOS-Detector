@@ -72,8 +72,8 @@ if df is not None:
     model.fit(X_train, y_train)
     
     user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
-    
-    if st.button("Submit Prediction"):
+
+  if st.button("Submit Prediction"):
     input_df = pd.DataFrame([user_input])
     prediction_proba = model.predict_proba(input_df)
 
@@ -89,7 +89,7 @@ if df is not None:
     with open(report_path, "rb") as file:
         st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
-
+    
     # Graphs
     st.header("2. Data Visualizations")
     st.subheader("Case Distribution")
