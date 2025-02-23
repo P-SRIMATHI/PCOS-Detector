@@ -143,13 +143,13 @@ if df is not None:
     # Trivia Quiz
     st.header("Trivia Quiz")
     questions = {
-        "What hormone is commonly imbalanced in PCOS?": "Testosterone",
-        "What is a common symptom of PCOS?": "Irregular periods",
-        "Which lifestyle change can help manage PCOS?": "Regular exercise"
+        "What hormone is commonly imbalanced in PCOS?": ["Testosterone", "Estrogen", "Progesterone"],
+        "What is a common symptom of PCOS?": ["Irregular periods", "High blood pressure", "Low blood sugar"],
+        "Which lifestyle change can help manage PCOS?": ["Regular exercise", "Increased caffeine intake", "Skipping meals"]
     }
-    for question, answer in questions.items():
-        user_answer = st.radio(question, [answer, "Wrong Answer"])
-        if user_answer == answer:
+    for question, options in questions.items():
+        user_answer = st.radio(question, options)
+        if user_answer == options[0]:
             st.success("Correct!")
         else:
             st.error("Incorrect. Try again!")
