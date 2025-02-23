@@ -132,9 +132,9 @@ if df is not None:
 
         st.write("### Prediction:")
         if prediction == 1:
-            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%}")
+            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
         else:
-            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%}")
+            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
         
         report_path = generate_report(prediction_prob)
         with open(report_path, "rb") as file:
@@ -148,10 +148,10 @@ if df is not None:
         response = openai.Completion.create(engine="text-davinci-003", prompt=user_question, max_tokens=100)
         st.write(response["choices"][0]["text"].strip())
     
-    # Display SHAP values
-    explainer = shap.Explainer(model, X_train)
-    shap_values = explainer(X_test)
+    # Display SHAP values safely
     st.header("SHAP Value Plot")
+    explainer = shap.Explainer(model, X_train, feature_perturbation="tree_path_dependent")
+    shap_values = explainer.shap_values(X_test[:50])
     fig, ax = plt.subplots()
-    shap.summary_plot(shap_values, X_test, show=False)
+    shap.summary_plot(shap_values, X_test[:50], show=False)
     st.pyplot(fig)
