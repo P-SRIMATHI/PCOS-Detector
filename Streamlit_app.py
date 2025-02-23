@@ -8,7 +8,7 @@ import shap
 import openai
 import speech_recognition as sr
 import pyttsx3
-from dotenv import load_dotenv
+from dotenv import load_dotenv  
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -36,11 +36,13 @@ def load_data():
 df = load_data()
 
 def preprocess_data(df):
-    required_columns = ["AMH", "1 BETA HCG", "2 BETA HCG"]
-    if not all(col in df.columns for col in required_columns):
-        st.error("Required features missing from dataset!")
+    required_columns = ["I beta-HCG(mIU/mL)", "II beta-HCG(mIU/mL)", "AMH(ng/mL)"]
+    
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        st.error(f"Required features missing from dataset! Missing columns: {missing_columns}")
         return None, None, None, None
-
+    
     X = df[required_columns]
     y = df["PCOS (Y/N)"].astype(int)
     
@@ -86,80 +88,77 @@ def generate_report(prediction_prob):
     
     report_path = "PCOS_Report.pdf"
     pdf.output(report_path)
+    st.success("Report generated successfully!")
     return report_path
 
 if df is not None:
     X, y, scaler, feature_columns = preprocess_data(df)
-    if X is not None:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-        model = RandomForestClassifier(n_estimators=200, random_state=42, class_weight='balanced')
-        model.fit(X_train, y_train)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    model = RandomForestClassifier(n_estimators=200, random_state=42, class_weight='balanced')
+    model.fit(X_train, y_train)
+    
+    st.title("PCOS Prediction App")
+    
+    st.sidebar.header("User Input")
+    weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+    height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
+    
+    user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
+    
+    if st.sidebar.button("Submit"):
+        input_df = pd.DataFrame([user_input])
+        input_df[feature_columns] = scaler.transform(input_df[feature_columns])
+        prediction_prob = model.predict_proba(input_df)[0][1]
+        prediction = 1 if prediction_prob > 0.5 else 0  
 
-        st.title("PCOS Prediction App")
-
-        st.sidebar.header("User Input")
-        weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
-        height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
-        bmi = weight / ((height / 100) ** 2)
-        st.sidebar.write(f"Calculated BMI: {bmi:.2f}")
-
-        user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
-
-        if st.sidebar.button("Submit"):
-            input_df = pd.DataFrame([user_input])
-            input_df[feature_columns] = scaler.transform(input_df[feature_columns])
-            prediction_prob = model.predict_proba(input_df)[0][1]
-            prediction = 1 if prediction_prob > 0.5 else 0  
-
-            st.write("### Prediction:")
-            if prediction == 1:
-                st.error(f"⚠ PCOS Detected (Confidence: {prediction_prob:.2%})")
-            else:
-                st.success(f"✅ No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
-
-            report_path = generate_report(prediction_prob)
-            with open(report_path, "rb") as file:
-                st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
-
-        st.subheader("PCOS Case Distribution")
-        fig, ax = plt.subplots()
-        sns.countplot(x=y, palette=["red", "green"], ax=ax)
-        ax.set_xticklabels(["Negative", "Positive"])
-        st.pyplot(fig)
-
-        st.subheader("Feature Impact on Model Output")
-        explainer = shap.Explainer(model, X_train)
-        shap_values = explainer(X_test)
-        feature_indices = [X_train.columns.get_loc(f) for f in feature_columns]
-        fig, ax = plt.subplots(figsize=(10, 5))
-        shap.summary_plot(shap_values[:, feature_indices], X_test.iloc[:, feature_indices], plot_type="bar", show=False)
-        st.pyplot(fig)
-
-        st.header("PCOS Trivia Quiz 🧠")
-        questions = {
-            "What is PCOS?": ["A hormonal disorder", "A type of cancer", "A viral infection", "A digestive disorder"],
-            "Which symptom is common in PCOS?": ["Irregular periods", "Fever", "Low blood pressure", "Hearing loss"],
-            "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "Avoiding all fats", "Sleeping less"],
-            "Which hormone is often imbalanced in PCOS?": ["Insulin", "Adrenaline", "Cortisol", "Melatonin"],
-            "What is a common complication of PCOS?": ["Infertility", "Hair loss", "Liver failure", "Hearing problems"]
-        }
-
-        score = 0
-        for question, options in questions.items():
-            answer = st.radio(question, options, key=question)
-            if answer == options[0]:
-                score += 1
-
-        st.write(f"Your Score: {score}/{len(questions)}")
-
-        st.subheader("PCOS Chatbot 🤖")
-        user_message = st.text_input("Ask me anything about PCOS:")
-        if user_message:
+        st.write("### Prediction:")
+        if prediction == 1:
+            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%}")
+        else:
+            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%}")
+        
+        report_path = generate_report(prediction_prob)
+        with open(report_path, "rb") as file:
+            st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
+    
+    st.subheader("PCOS Case Distribution")
+    fig, ax = plt.subplots()
+    sns.countplot(x=y, palette=["red", "green"], ax=ax)
+    st.pyplot(fig)
+    
+    st.subheader("Feature Importance (SHAP)")
+    explainer = shap.Explainer(model, X_train)
+    shap_values = explainer(X_test)
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values, X_test, feature_names=feature_columns, show=False)
+    st.pyplot(fig)
+    
+    st.header("PCOS Chatbot 🤖")
+    user_query = st.text_input("Ask me anything about PCOS!")
+    if st.button("Ask"):
+        if user_query:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": user_message}]
+                messages=[{"role": "system", "content": "You are a PCOS health expert."},
+                          {"role": "user", "content": user_query}]
             )
-            st.write("Chatbot:", response["choices"][0]["message"]["content"])
+            st.write("💬 Chatbot:", response["choices"][0]["message"]["content"])
+        else:
+            st.warning("Please enter a question!")
 
+    st.header("PCOS Trivia Quiz")
+    questions = {
+        "What is PCOS?": ["A hormonal disorder", "A type of cancer", "A viral infection", "A digestive disorder"],
+        "Which hormone is commonly imbalanced in PCOS?": ["Insulin", "Cortisol", "Testosterone", "Estrogen"],
+        "Which symptom is common in PCOS?": ["Irregular periods", "Fever", "Low blood pressure", "Hearing loss"],
+    }
+    
+    score = 0
+    for question, options in questions.items():
+        answer = st.radio(question, options, key=question)
+        if answer == options[0]:
+            score += 1
+    
+    st.write(f"Your Score: {score}/{len(questions)}")
 else:
     st.write("Please upload the required CSV file.")
