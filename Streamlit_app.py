@@ -83,18 +83,18 @@ if df is not None:
         input_df = pd.DataFrame([user_input])
         prediction_proba = model.predict_proba(input_df)
 
-    # Check if the model returns a probability distribution (2D array) or a single value (1D array)
-    if len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
-        prediction_prob = prediction_proba[0][1]  # Probability of PCOS
-    else:
-        prediction_prob = prediction_proba[0]  # If only one probability value is returned
+        # Check if prediction_proba is a NumPy array and has a shape attribute
+        if isinstance(prediction_proba, np.ndarray) and len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
+            prediction_prob = prediction_proba[0][1]  # Probability of PCOS
+        else:
+            prediction_prob = prediction_proba[0]  # If only one probability value is returned
 
-    prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
-    st.success(prediction)
-    
-    report_path = generate_report(prediction_prob)
-    with open(report_path, "rb") as file:
-        st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
+        prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
+        st.success(prediction)
+        
+        report_path = generate_report(prediction_prob)
+        with open(report_path, "rb") as file:
+            st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
     
     # Graphs
