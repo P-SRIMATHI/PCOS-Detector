@@ -1,16 +1,14 @@
 import streamlit as st
 import os
 import pandas as pd
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import shap
-import openai
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
+import openai
 
 # Set up OpenAI API key securely
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -52,7 +50,7 @@ def generate_report(prediction_prob):
     pdf.output(report_path)
     return report_path
 
-# Start Streamlit app with clean interface
+# Main Streamlit app code
 st.title("PCOS Prediction App")
 
 # Main navigation (6 clickable sections displayed as cards)
@@ -80,9 +78,11 @@ with col6:
     if st.button("Chatbot"):
         st.session_state.feature = "Chatbot"
 
-# Show content based on selected feature
+# Display the corresponding feature content based on selection
 if "feature" in st.session_state:
     feature = st.session_state.feature
+    
+    # Prediction feature
     if feature == "Prediction":
         st.header("PCOS Prediction")
         weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
@@ -126,6 +126,7 @@ if "feature" in st.session_state:
             elif prediction_prob > 0.5:
                 st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
 
+    # Data Visualization feature
     elif feature == "Visualization":
         st.header("Data Visualizations")
         df = load_data()
@@ -149,6 +150,7 @@ if "feature" in st.session_state:
         shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
         st.pyplot(fig)
 
+    # Gamification feature
     elif feature == "Gamification":
         st.header("Track Your Health Progress")
 
@@ -178,6 +180,7 @@ if "feature" in st.session_state:
 
         st.write(f"Total Health Points: {st.session_state.health_points}")
 
+    # Trivia Quiz feature
     elif feature == "Quiz":
         st.header("PCOS Trivia Quiz")
         questions = {
@@ -193,6 +196,7 @@ if "feature" in st.session_state:
                 quiz_score += 1
         st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
 
+    # Community Support feature
     elif feature == "Support":
         st.header("Community Support")
         new_post = st.text_area("Post your experience or ask a question:")
@@ -208,6 +212,7 @@ if "feature" in st.session_state:
             for idx, post in enumerate(st.session_state.posts, 1):
                 st.write(f"{idx}. {post}")
 
+    # Chatbot feature
     elif feature == "Chatbot":
         st.header("Chatbot")
         user_question = st.text_input("Ask me anything about PCOS:")
