@@ -44,6 +44,7 @@ def load_data():
     df.columns = df.columns.str.strip()  # Remove extra spaces
     df.columns = df.columns.str.replace(" ", "_")  # Replace spaces with underscores
     st.write("Columns in the dataset:", df.columns)  # Display column names for debugging
+    st.write(df.head())  # Show the first few rows of the data for further inspection
     return df
 
 # Load dataset and prepare for prediction
@@ -109,8 +110,37 @@ if st.button("Submit Prediction"):
     elif prediction_prob > 0.5:
         st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
 
+# Mood Tracker
+st.header("2. Mood Tracker 😊")
+mood = st.selectbox("How do you feel today?", ["Happy", "Excited", "Neutral", "Sad", "Anxious"])
+
+# Display mood and give advice
+if mood:
+    mood_advice = {
+        "Happy": "Keep up the great energy! 🌟",
+        "Excited": "Enjoy the excitement! 🌈",
+        "Neutral": "It's okay to feel neutral, take it easy. ☁️",
+        "Sad": "Take care of yourself, things will get better. 💙",
+        "Anxious": "Try some deep breaths, you're doing well. 🌱"
+    }
+    st.write(f"You are feeling: {mood}")
+    st.write(mood_advice.get(mood, "Stay strong!"))
+
+# Recipes Section
+st.header("3. PCOS-Friendly Recipes 🍲")
+recipes = [
+    {"name": "Spinach & Chickpea Curry", "ingredients": ["Spinach", "Chickpeas", "Coconut milk", "Garlic", "Ginger"]},
+    {"name": "Oats Pancakes", "ingredients": ["Oats", "Eggs", "Banana", "Almond milk"]},
+    {"name": "Greek Yogurt Salad", "ingredients": ["Greek Yogurt", "Cucumber", "Olives", "Olive oil", "Lemon"]},
+]
+
+# Display recipes
+for recipe in recipes:
+    st.subheader(recipe["name"])
+    st.write("Ingredients:", ", ".join(recipe["ingredients"]))
+
 # Graphs and Data Visualization
-st.header("2. Data Visualizations 📊")
+st.header("4. Data Visualizations 📊")
 st.subheader("Case Distribution")
 fig, ax = plt.subplots()
 sns.countplot(x=y, ax=ax)
@@ -131,7 +161,7 @@ shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=Fal
 st.pyplot(fig)
 
 # Health Gamification Section
-st.header("3. Health Gamification 🎮")
+st.header("5. Health Gamification 🎮")
 if "health_points" not in st.session_state:
     st.session_state.health_points = 0
 if "water_intake" not in st.session_state:
@@ -165,7 +195,7 @@ else:
 st.write(f"Total Health Points: {st.session_state.health_points}")
 
 # Community Support: User can post questions and share experiences
-st.header("4. Community Support 💬")
+st.header("6. Community Support 💬")
 new_post = st.text_area("Post your experience or ask a question:")
 if st.button("Submit Post"):
     if new_post:
@@ -181,14 +211,14 @@ if st.session_state.posts:
         st.write(f"{idx}. {post}")
 
 # Chatbot Section
-st.header("5. Chatbot 🤖")
+st.header("7. Chatbot 🤖")
 user_question = st.text_input("Ask me anything about PCOS:")
 if user_question:
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
     st.write(response["choices"][0]["message"]["content"])
 
 # Trivia Quiz Section
-st.header("6. Trivia Quiz 🧠")
+st.header("8. Trivia Quiz 🧠")
 questions = {
     "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
     "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
