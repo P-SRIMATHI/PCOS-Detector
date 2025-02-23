@@ -96,7 +96,14 @@ if df is not None:
         with open(report_path, "rb") as file:
             st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
-    
+    # AI-powered Alerts (based on model prediction)
+    st.header("6. AI-powered Alerts")
+    if 'prediction_prob' in locals():
+        if prediction_prob > 0.8:
+            st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
+        elif prediction_prob > 0.5:
+            st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
+
     # Graphs
     st.header("2. Data Visualizations")
     st.subheader("Case Distribution")
@@ -158,10 +165,3 @@ if df is not None:
         st.write("### Community Posts:")
         for idx, post in enumerate(st.session_state.posts, 1):
             st.write(f"{idx}. {post}")
-    
-    # AI-powered Alerts (based on model prediction)
-    st.header("6. AI-powered Alerts")
-    if prediction_prob > 0.8:
-        st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
-    elif prediction_prob > 0.5:
-        st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
