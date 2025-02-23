@@ -20,6 +20,12 @@ if "score" not in st.session_state:
     st.session_state.score = 0
 if "posts" not in st.session_state:
     st.session_state.posts = []
+if "health_points" not in st.session_state:
+    st.session_state.health_points = 0
+if "water_intake" not in st.session_state:
+    st.session_state.water_intake = 0
+if "steps_walked" not in st.session_state:
+    st.session_state.steps_walked = 0
 
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
@@ -49,7 +55,7 @@ with col1:
 with col2:
     health_game_button = st.button("3. Health Gamification 🎮")
 with col3:
-    st.button("1. PCOS Prediction 🤖")
+    prediction_button = st.button("1. PCOS Prediction 🤖")
 with col4:
     trivia_button = st.button("4. Trivia Quiz ❓")
 with col5:
@@ -57,52 +63,9 @@ with col5:
 with col6:
     chatbot_button = st.button("6. Chatbot 🤖")
 
-# Track water intake and steps in gamification
-if health_game_button:
-    st.title("Health Gamification")
-    st.header("Track Your Progress and Earn Points!")
-    
-    # Initialize session state variables for gamification
-    if "health_points" not in st.session_state:
-        st.session_state.health_points = 0
-    if "water_intake" not in st.session_state:
-        st.session_state.water_intake = 0
-    if "steps_walked" not in st.session_state:
-        st.session_state.steps_walked = 0
-
-    # Track Water Intake
-    st.subheader("Track Your Water Intake")
-    water_glasses = st.slider("How many glasses of water did you drink today?", min_value=0, max_value=15)
-    st.session_state.water_intake = water_glasses
-
-    # Reward for Drinking Water
-    if st.session_state.water_intake >= 8:
-        st.session_state.health_points += 10
-        st.success("Great job! You've completed your water intake goal! +10 points")
-    else:
-        st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
-
-    # Track Steps
-    st.subheader("Track Your Steps")
-    steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
-    st.session_state.steps_walked = steps
-
-    # Reward for Walking Steps
-    if st.session_state.steps_walked >= 10000:
-        st.session_state.health_points += 20
-        st.success("Amazing! You've reached 10,000 steps! +20 points")
-    else:
-        st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
-
-    # Display Total Health Points
-    st.write(f"Total Health Points: {st.session_state.health_points}")
-
-    # Challenge Participation
-    if st.session_state.health_points >= 50:
-        st.balloons()
-
 # Handle Prediction Section
-if st.button("1. PCOS Prediction 🤖"):
+if prediction_button:
+    st.header("PCOS Prediction")
     weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
     height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
     bmi = calculate_bmi(weight, height)
@@ -134,7 +97,7 @@ if st.button("1. PCOS Prediction 🤖"):
         X_scaled = scaler.fit_transform(X)
 
         smote = SMOTE(random_state=42)
-        X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
+        X_resampled, y_resampled = smote.fit_resample(X_scaled, y_resampled)
 
         X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
         model = RandomForestClassifier(n_estimators=200, random_state=42)
@@ -192,9 +155,45 @@ if data_viz_button:
     shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
     st.pyplot(fig)  # Display plot
 
+# Handle Health Gamification Section
+if health_game_button:
+    st.header("Health Gamification")
+    st.subheader("Track Your Progress and Earn Points!")
+
+    # Track Water Intake
+    st.subheader("Track Your Water Intake")
+    water_glasses = st.slider("How many glasses of water did you drink today?", min_value=0, max_value=15)
+    st.session_state.water_intake = water_glasses
+
+    # Reward for Drinking Water
+    if st.session_state.water_intake >= 8:
+        st.session_state.health_points += 10
+        st.success("Great job! You've completed your water intake goal! +10 points")
+    else:
+        st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
+
+    # Track Steps
+    st.subheader("Track Your Steps")
+    steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
+    st.session_state.steps_walked = steps
+
+    # Reward for Walking Steps
+    if st.session_state.steps_walked >= 10000:
+        st.session_state.health_points += 20
+        st.success("Amazing! You've reached 10,000 steps! +20 points")
+    else:
+        st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
+
+    # Display Total Health Points
+    st.write(f"Total Health Points: {st.session_state.health_points}")
+
+    # Challenge Participation
+    if st.session_state.health_points >= 50:
+        st.balloons()
+
 # Handle Trivia Quiz Section
 if trivia_button:
-    st.header("4. Trivia Quiz")
+    st.header("Trivia Quiz")
     questions = {
         "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
         "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
@@ -212,7 +211,7 @@ if trivia_button:
 
 # Handle Community Support Section
 if support_button:
-    st.header("5. Community Support")
+    st.header("Community Support")
     new_post = st.text_area("Post your experience or ask a question:")
     if st.button("Submit Post"):
         if new_post:
@@ -228,7 +227,7 @@ if support_button:
 
 # Handle Chatbot Section
 if chatbot_button:
-    st.header("6. Chatbot")
+    st.header("Chatbot")
     user_question = st.text_input("Ask me anything about PCOS:")
     if user_question:
         response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
