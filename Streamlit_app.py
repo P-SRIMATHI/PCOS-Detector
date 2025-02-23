@@ -167,3 +167,47 @@ if df is not None:
         st.write("### Community Posts:")
         for idx, post in enumerate(st.session_state.posts, 1):
             st.write(f"{idx}. {post}")
+            # --- (Rest of your current code) ---
+
+# Health Goals and Gamification Section
+st.title("Health Gamification")
+st.header("Track Your Progress and Earn Points!")
+
+# Initialize session state variables for gamification
+if "health_points" not in st.session_state:
+    st.session_state.health_points = 0
+if "water_intake" not in st.session_state:
+    st.session_state.water_intake = 0  # Track how many glasses of water user has had
+if "steps_walked" not in st.session_state:
+    st.session_state.steps_walked = 0  # Track number of steps
+
+# Track Water Intake
+st.subheader("Track Your Water Intake")
+water_glasses = st.slider("How many glasses of water did you drink today?", min_value=0, max_value=15)
+st.session_state.water_intake = water_glasses
+
+# Reward for Drinking Water
+if st.session_state.water_intake >= 8:
+    st.session_state.health_points += 10  # Give points for completing water goal
+    st.success("Great job! You've completed your water intake goal! +10 points")
+else:
+    st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
+
+# Track Steps (example challenge)
+st.subheader("Track Your Steps")
+steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
+st.session_state.steps_walked = steps
+
+# Reward for Walking Steps
+if st.session_state.steps_walked >= 10000:
+    st.session_state.health_points += 20  # Give points for walking 10,000 steps
+    st.success("Amazing! You've reached 10,000 steps! +20 points")
+else:
+    st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
+
+# Display Total Health Points
+st.write(f"Total Health Points: {st.session_state.health_points}")
+
+# Challenge Participation (Gamification)
+if st.session_state.health_points >= 50:
+    st.balloons()  # Fun celebrati
