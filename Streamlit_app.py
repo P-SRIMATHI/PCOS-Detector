@@ -116,42 +116,31 @@ if df is not None:
     
     st.title("PCOS Prediction App")
     
-    st.sidebar.header("User Input")
-    weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
-    height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
+    st.header("1. PCOS Prediction")
+    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+    height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
     bmi = calculate_bmi(weight, height)
-    st.sidebar.write(f"Calculated BMI: {bmi:.2f}")
+    st.write(f"Calculated BMI: {bmi:.2f}")
     
-    user_input = {col: st.sidebar.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
+    user_input = {col: st.number_input(f"{col}", value=float(X[col].mean())) for col in feature_columns}
     
-    if st.sidebar.button("Submit"):
+    if st.button("Submit Prediction"):
         input_df = pd.DataFrame([user_input])
         input_df[feature_columns] = scaler.transform(input_df[feature_columns])
         prediction_prob = model.predict_proba(input_df)[0][1]
         prediction = 1 if prediction_prob > 0.5 else 0  
-
-        st.write("### Prediction:")
-        if prediction == 1:
-            st.error(f"PCOS Detected (Confidence: {prediction_prob:.2%})")
-        else:
-            st.success(f"No PCOS Detected (Confidence: {1 - prediction_prob:.2%})")
         
+        st.write("### Prediction Result:")
+        st.success("PCOS Detected" if prediction else "No PCOS Detected")
         report_path = generate_report(prediction_prob)
         with open(report_path, "rb") as file:
-            st.download_button("Download Personalized Report", file, file_name="PCOS_Report.pdf")
+            st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
     
-    # Display chatbot
-    st.header("PCOS Chatbot")
-    st.write("Ask me anything about PCOS!")
-    user_question = st.text_input("Your Question:")
-    if user_question:
-        response = openai.Completion.create(engine="text-davinci-003", prompt=user_question, max_tokens=100)
-        st.write(response["choices"][0]["text"].strip())
+    st.header("2. Data Visualizations")
+    st.write("Graphs will be displayed here.")
     
-    # Display SHAP values safely
-    st.header("SHAP Value Plot")
-    explainer = shap.Explainer(model, X_train, feature_perturbation="tree_path_dependent")
-    shap_values = explainer.shap_values(X_test[:50])
-    fig, ax = plt.subplots()
-    shap.summary_plot(shap_values, X_test[:50], show=False)
-    st.pyplot(fig)
+    st.header("3. Chatbot")
+    st.write("Chatbot feature coming soon.")
+    
+    st.header("4. Trivia Quiz")
+    st.write("Quiz related to PCOS.")
