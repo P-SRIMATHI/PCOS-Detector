@@ -43,13 +43,13 @@ st.write(f"Calculated BMI: {bmi:.2f}")
 @st.cache_data
 def load_data():
     df = pd.read_csv("PCOS_data.csv")
-    df.columns = df.columns.str.replace(" ", "_")
+    df.columns = df.columns.str.replace(" ", "_").str.replace("(__|\(|\)|-|:|,)", "", regex=True)
     return df
 
 df = load_data()
 
 if df is not None:
-    selected_features = ["AMH", "betaHCG", "FSH_mIUmL"]
+    selected_features = ["AMH_ngmL", "II____betaHCG_mIUmL", "FSH_mIUmL"]
     available_features = [col for col in selected_features if col in df.columns]
 
     if not available_features:
@@ -59,7 +59,7 @@ if df is not None:
 
     df = df.dropna()
     X = df[available_features]
-    y = df["PCOS_(Y/N)"]
+    y = df["PCOS_YN"]
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
