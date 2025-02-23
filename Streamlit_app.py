@@ -45,9 +45,8 @@ def load_data():
     df.columns = df.columns.str.replace(" ", "_")  # Replace spaces with underscores
     return df
 
-# Check the column names to make sure we're selecting correct features
+# Load dataset and prepare for prediction
 df = load_data()
-st.write("Columns in the dataset:", df.columns)
 
 # Define the features you're interested in (ensure they exist in your dataset)
 possible_features = ["AMH", "betaHCG", "FSH"]
@@ -55,7 +54,6 @@ selected_features = [col for col in df.columns if any(feature in col for feature
 
 if not selected_features:
     st.error("None of the selected features are found in the dataset! Please check column names.")
-    st.write("Columns in dataset:", df.columns.tolist())
     st.stop()
 
 # Preprocessing and Model Training
