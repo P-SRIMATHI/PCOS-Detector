@@ -116,7 +116,14 @@ if df is not None:
     
     st.title("PCOS Prediction App")
     
+    st.header("1. PCOS Prediction")
+    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+    height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
+    bmi = calculate_bmi(weight, height)
+    st.write(f"Calculated BMI: {bmi:.2f}")
+    
     st.header("2. Data Visualizations")
+    
     st.subheader("Feature Distributions")
     for column in feature_columns[:3]:
         fig, ax = plt.subplots()
