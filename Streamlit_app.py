@@ -20,10 +20,18 @@ if "score" not in st.session_state:
     st.session_state.score = 0
 if "posts" not in st.session_state:
     st.session_state.posts = []
+if "health_points" not in st.session_state:
+    st.session_state.health_points = 0  # Initialize health points at the start
+if "water_intake" not in st.session_state:
+    st.session_state.water_intake = 0
+if "steps_walked" not in st.session_state:
+    st.session_state.steps_walked = 0
 
+# Function to calculate BMI
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
 
+# Function to generate report
 def generate_report(prediction_prob):
     pdf = FPDF()
     pdf.add_page()
@@ -167,14 +175,25 @@ st.write(f"Total Health Points: {st.session_state.health_points}")
 if st.session_state.health_points >= 50:
     st.balloons()  # Celebration!
 
-# Chatbot and Support Section
-st.header("4. Chatbot & Community Support")
-user_question = st.text_input("Ask me anything about PCOS:")
-if user_question:
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
-    st.write(response["choices"][0]["message"]["content"])
+# Trivia Quiz Section
+st.header("4. PCOS Trivia Quiz")
+questions = {
+    "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
+    "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
+    "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"],
+    "What is the most common age for PCOS diagnosis?": ["Teens to early 30s", "40s to 50s", "50s+"]
+}
+
+quiz_score = 0  # Initialize quiz score
+for question, options in questions.items():
+    answer = st.radio(question, options)
+    if answer == options[0]:
+        quiz_score += 1
+st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
+st.session_state.score += quiz_score  # Add quiz score to session score
 
 # Community Support: User can post questions and share experiences
+st.header("5. Community Support")
 new_post = st.text_area("Post your experience or ask a question:")
 if st.button("Submit Post"):
     if new_post:
@@ -188,3 +207,10 @@ if st.session_state.posts:
     st.write("### Community Posts:")
     for idx, post in enumerate(st.session_state.posts, 1):
         st.write(f"{idx}. {post}")
+
+# Chatbot Section: Users can ask anything about PCOS
+st.header("6. Chatbot")
+user_question = st.text_input("Ask me anything about PCOS:")
+if user_question:
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
+    st.write(response["choices"][0]["message"]["content"])
