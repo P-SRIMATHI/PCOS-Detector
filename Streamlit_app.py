@@ -154,9 +154,10 @@ if df is not None:
         else:
             st.error("Incorrect. Try again!")
     
-    # SHAP Graph
+    # SHAP Value Plot
     explainer = shap.Explainer(model, X_train)
     shap_values = explainer(X_test)
     st.header("SHAP Value Plot")
-    shap.summary_plot(shap_values, X_test)
-    st.pyplot()
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values, X_test, show=False)
+    st.pyplot(fig)
