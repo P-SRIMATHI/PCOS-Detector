@@ -50,8 +50,15 @@ df = load_data()
 
 if df is not None:
     selected_features = ["AMH", "betaHCG", "FSH_mIUmL"]
+    available_features = [col for col in selected_features if col in df.columns]
+
+    if not available_features:
+        st.error("None of the selected features are found in the dataset! Please check column names.")
+        st.write("Columns in dataset:", df.columns.tolist())
+        st.stop()
+
     df = df.dropna()
-    X = df[selected_features]
+    X = df[available_features]
     y = df["PCOS_(Y/N)"]
 
     scaler = StandardScaler()
@@ -64,7 +71,7 @@ if df is not None:
     model = RandomForestClassifier(n_estimators=200, random_state=42)
     model.fit(X_train, y_train)
     
-    user_input = {col: st.number_input(f"{col}", value=float(X[:, i].mean())) for i, col in enumerate(selected_features)}
+    user_input = {col: st.number_input(f"{col}", value=float(X[:, i].mean())) for i, col in enumerate(available_features)}
     if st.button("Submit Prediction"):
         input_df = pd.DataFrame([user_input])
         prediction_prob = model.predict_proba(input_df)[0][1]
@@ -85,14 +92,14 @@ if df is not None:
     st.subheader("Feature Importance")
     feature_importances = model.feature_importances_
     fig, ax = plt.subplots()
-    sns.barplot(x=selected_features, y=feature_importances, ax=ax)
+    sns.barplot(x=available_features, y=feature_importances, ax=ax)
     st.pyplot(fig)
     
     st.subheader("SHAP Model Impact")
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_test)
     fig, ax = plt.subplots()
-    shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
+    shap.summary_plot(shap_values, X_test, feature_names=available_features, show=False)
     st.pyplot(fig)
     
     # Chatbot
