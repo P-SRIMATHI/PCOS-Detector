@@ -75,7 +75,7 @@ if df is not None:
     
     if st.button("Submit Prediction"):
         input_df = pd.DataFrame([user_input])
-        prediction_prob = model.predict_proba(input_df)[0][1]
+        prediction_prob = model.predict_proba(input_df)[0][1] if len(model.predict_proba(input_df).shape) > 1 else model.predict_proba(input_df)[0]
         prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
         st.success(prediction)
         report_path = generate_report(prediction_prob)
