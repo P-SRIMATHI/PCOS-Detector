@@ -215,6 +215,10 @@ if st.session_state.moods:
         st.pyplot(mood_trend_fig)
     else:
         st.warning("No mood data available yet.")
+# Make sure to initialize recipes in session state if it doesn't exist
+if "recipes" not in st.session_state:
+    st.session_state.recipes = []
+
 # PCOS Recipes Section
 st.header("7. PCOS Recipes 🍲")
 
@@ -268,7 +272,7 @@ if st.button("Submit Recipe"):
     else:
         st.warning("Please fill in all the fields before submitting.")
         
-# Display user-submitted recipes
+# Display user-submitted recipes (ensure there are recipes in session state)
 if st.session_state.recipes:
     st.write("### User-Submitted Recipes")
     for recipe in st.session_state.recipes:
