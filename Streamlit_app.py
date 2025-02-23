@@ -143,7 +143,7 @@ if df is not None:
         st.pyplot(fig)
     
     st.header("3. Chatbot")
-    st.write("Chatbot is under development.")
+    st.text_input("Ask me anything about PCOS:")
     
     st.header("4. Trivia Quiz")
     questions = {
@@ -151,7 +151,5 @@ if df is not None:
         "Which hormone is often imbalanced in PCOS?": ["Insulin", "Adrenaline"],
         "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals"]
     }
-    
     for question, options in questions.items():
-        st.write(question)
-        st.radio("", options)
+        st.radio(question, options)
