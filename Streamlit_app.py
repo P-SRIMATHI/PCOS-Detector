@@ -15,6 +15,12 @@ from fpdf import FPDF
 # Load API Key securely
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize session state variables for gamification and community
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "posts" not in st.session_state:
+    st.session_state.posts = []
+
 def calculate_bmi(weight, height):
     return weight / ((height / 100) ** 2)
 
@@ -32,60 +38,123 @@ def generate_report(prediction_prob):
     return report_path
 
 st.title("PCOS Prediction App")
-st.markdown("<h2 style='text-align: center;'>Welcome to the PCOS Detection App</h2>", unsafe_allow_html=True)
 
-# Create a grid layout for 6 clickable boxes
-col1, col2, col3 = st.columns(3)
-col4, col5, col6 = st.columns(3)
+# Load Data
+@st.cache_data
+def load_data():
+    df = pd.read_csv("PCOS_data.csv")
+    df.columns = df.columns.str.replace(" ", "_").str.replace("(__|\(|\)|-|:|,)", "", regex=True)
+    return df
 
-# 1st row - Prediction, Data Visualizations, Health Gamification
-with col1:
-    if st.button("🔮 **PCOS Prediction**", help="Click here to predict the risk of PCOS based on your data.", key="prediction", use_container_width=True):
-        # Your Prediction code here (already present)
+df = load_data()
+
+if df is not None:
+    possible_features = ["AMH", "betaHCG", "FSH"]
+    selected_features = [col for col in df.columns if any(feature in col for feature in possible_features)]
+    
+    if not selected_features:
+        st.error("None of the selected features are found in the dataset! Please check column names.")
+        st.write("Columns in dataset:", df.columns.tolist())
+        st.stop()
+
+    df = df.dropna()
+    X = df[selected_features]
+    y = df[df.columns[df.columns.str.contains("PCOS")][0]]
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    smote = SMOTE(random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+    model = RandomForestClassifier(n_estimators=200, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Sidebar with clickable boxes
+    st.sidebar.title("Navigate")
+    option = st.sidebar.selectbox(
+        "Choose a section",
+        ("PCOS Prediction", "Data Visualizations", "Health Gamification", "Trivia Quiz", "Community Support", "Chatbot")
+    )
+
+    if option == "PCOS Prediction":
+        st.header("1. PCOS Prediction")
         weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
         height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
         bmi = calculate_bmi(weight, height)
         st.write(f"Calculated BMI: {bmi:.2f}")
 
-        # Prediction logic here...
-        # After prediction, show report
-        report_path = generate_report(prediction_prob)
-        with open(report_path, "rb") as file:
-            st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
+        user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
 
-with col2:
-    if st.button("📊 **Data Visualizations**", help="View data distributions, feature importance, and model impact.", key="visualizations", use_container_width=True):
-        # Data Visualization content (graphs, charts)
-        st.header("Data Visualizations")
-        # Your visualization code here...
+        if st.button("🔮 **PCOS Prediction**", help="Click here to predict the risk of PCOS based on your data.", key="prediction", use_container_width=True):
+            input_df = pd.DataFrame([user_input])
+            prediction_proba = model.predict_proba(input_df)
 
-with col3:
-    if st.button("🎮 **Health Gamification**", help="Track your health goals, earn points, and improve your lifestyle.", key="gamification", use_container_width=True):
-        # Health gamification (Water intake, Steps, etc.)
-        st.title("Health Gamification")
-        # Your health gamification code here...
+            # Check if prediction_proba is a NumPy array and has a shape attribute
+            if isinstance(prediction_proba, np.ndarray) and len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
+                prediction_prob = prediction_proba[0][1]  # Probability of PCOS
+            else:
+                prediction_prob = prediction_proba[0]  # If only one probability value is returned
 
-# 2nd row - Trivia Quiz, Support, Chatbot
-with col4:
-    if st.button("🧠 **Trivia Quiz**", help="Test your knowledge about PCOS in a fun trivia quiz!", key="quiz", use_container_width=True):
-        # Trivia quiz content
-        st.header("Trivia Quiz")
+            prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
+            st.success(prediction)
+            
+            # Now safely call the generate_report function with the defined prediction_prob
+            report_path = generate_report(prediction_prob)
+            with open(report_path, "rb") as file:
+                st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
+
+            # AI-powered Alerts (based on model prediction)
+            st.header("AI-powered Alerts")
+            if prediction_prob > 0.8:
+                st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
+            elif prediction_prob > 0.5:
+                st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
+
+    elif option == "Data Visualizations":
+        st.header("2. Data Visualizations")
+        st.subheader("Case Distribution")
+        fig, ax = plt.subplots()
+        sns.countplot(x=y, ax=ax)
+        ax.set_xticklabels(["No PCOS", "PCOS"])
+        st.pyplot(fig)
+
+        st.subheader("Feature Importance")
+        feature_importances = model.feature_importances_
+        fig, ax = plt.subplots()
+        sns.barplot(x=selected_features, y=feature_importances, ax=ax)
+        st.pyplot(fig)
+
+        st.subheader("SHAP Model Impact")
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test)
+        fig, ax = plt.subplots()
+        shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
+        st.pyplot(fig)
+
+    elif option == "Health Gamification":
+        st.header("3. Health Gamification")
+        # Your health gamification logic here
+
+    elif option == "Trivia Quiz":
+        st.header("4. Trivia Quiz")
         questions = {
             "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
             "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
             "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"]
         }
+        
         quiz_score = 0  # Initialize quiz score
         for question, options in questions.items():
             answer = st.radio(question, options)
             if answer == options[0]:
                 quiz_score += 1
         st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
+        st.session_state.score += quiz_score  # Add quiz score to session score
 
-with col5:
-    if st.button("🤝 **Community Support**", help="Share experiences, ask questions, and interact with the community.", key="support", use_container_width=True):
-        # Community Support content (Post questions/experiences)
-        st.header("Community Support")
+    elif option == "Community Support":
+        st.header("5. Community Support")
         new_post = st.text_area("Post your experience or ask a question:")
         if st.button("Submit Post"):
             if new_post:
@@ -94,16 +163,17 @@ with col5:
             else:
                 st.warning("Please write something to post.")
         
+        # Display Community Posts
         if st.session_state.posts:
             st.write("### Community Posts:")
             for idx, post in enumerate(st.session_state.posts, 1):
                 st.write(f"{idx}. {post}")
 
-with col6:
-    if st.button("💬 **Chatbot**", help="Ask anything about PCOS, and get instant answers from our chatbot.", key="chatbot", use_container_width=True):
-        # Chatbot content (Ask about PCOS)
-        st.header("Chatbot")
+    elif option == "Chatbot":
+        st.header("6. Chatbot")
         user_question = st.text_input("Ask me anything about PCOS:")
         if user_question:
             response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
             st.write(response["choices"][0]["message"]["content"])
+
+# End of code
