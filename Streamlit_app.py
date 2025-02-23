@@ -74,13 +74,21 @@ if df is not None:
     user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
     
     if st.button("Submit Prediction"):
-        input_df = pd.DataFrame([user_input])
-        prediction_prob = model.predict_proba(input_df)[0][1] if len(model.predict_proba(input_df).shape) > 1 else model.predict_proba(input_df)[0]
-        prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
-        st.success(prediction)
-        report_path = generate_report(prediction_prob)
-        with open(report_path, "rb") as file:
-            st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
+    input_df = pd.DataFrame([user_input])
+    prediction_proba = model.predict_proba(input_df)
+
+    if len(prediction_proba.shape) > 1 and prediction_proba.shape[1] > 1:
+        prediction_prob = prediction_proba[0][1]  # Probability of PCOS
+    else:
+        prediction_prob = prediction_proba[0]  # If only one probability value is returned
+
+    prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
+    st.success(prediction)
+    
+    report_path = generate_report(prediction_prob)
+    with open(report_path, "rb") as file:
+        st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
+
 
     # Graphs
     st.header("2. Data Visualizations")
