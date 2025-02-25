@@ -257,3 +257,4 @@ def interactive_gif_display():
 
 # Call the function in your Streamlit app
 interactive_gif_display()
+
