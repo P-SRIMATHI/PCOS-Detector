@@ -234,27 +234,20 @@ for recipe in recipes:
     st.subheader(recipe["name"])
     st.write("Ingredients:", ", ".join(recipe["ingredients"]))
     import streamlit as st
+import streamlit.components.v1 as components
 
-# Function to display GIF-based PCOS simulation
-def interactive_gif_display():
-    st.header("🔍 Explore PCOS Visually (GIF-based Simulation)")
+# Function to display a clickable 3D PCOS model
+def interactive_3d_display():
+    st.header("🩺 Explore PCOS in 3D")
     
-    # Mapping of topics to GIF URLs
-    gif_mapping = {
-        "Hormonal Imbalance": "https://media.giphy.com/media/J5BzSktvJTaIU/giphy.gif",
-        "Ovarian Cysts Formation": "https://media.giphy.com/media/3o7TKRWiU7zYezLJH6/giphy.gif",
-        "PCOS Symptoms": "https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif",
-        "Lifestyle & Treatment": "https://media.giphy.com/media/fAnzw6p5FJfRm/giphy.gif"
-    }
+    # Embed a 3D model using an iframe (Replace URL with a valid 3D model link)
+    model_url = "https://sketchfab.com/models/abcdef123456/embed"  # Replace with actual Sketchfab or other 3D viewer link
     
-    # User selects a topic
-    selected_topic = st.selectbox("Choose a PCOS-related topic:", ["Select a topic"] + list(gif_mapping.keys()))
-
-    # Ensure a valid topic is selected before displaying the GIF
-    if selected_topic != "Select a topic":
-        st.image(gif_mapping[selected_topic], use_container_width=True)
-        st.write(f"**{selected_topic}** visualization")
+    st.write("Rotate, zoom, and explore the PCOS-related anatomy interactively.")
+    components.iframe(model_url, height=500)
 
 # Call the function in your Streamlit app
-interactive_gif_display()
+interactive_3d_display()
 
+
+ 
