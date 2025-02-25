@@ -233,11 +233,7 @@ recipes = [
 for recipe in recipes:
     st.subheader(recipe["name"])
     st.write("Ingredients:", ", ".join(recipe["ingredients"]))
-    
-    if selected_topic:
-        st.image(gif_mapping[selected_topic], use_column_width=True)
-        st.write(f"**{selected_topic}** visualization")
-        import streamlit as st
+    import streamlit as st
 
 # Function to display GIF-based PCOS simulation
 def interactive_gif_display():
@@ -252,10 +248,10 @@ def interactive_gif_display():
     }
     
     # User selects a topic
-    selected_topic = st.selectbox("Choose a PCOS-related topic:", options=["Select a topic"] + list(gif_mapping.keys()))
+    selected_topic = st.selectbox("Choose a PCOS-related topic:", ["Select a topic"] + list(gif_mapping.keys()))
 
-    # Ensure the user selects a valid topic before displaying the GIF
-    if selected_topic and selected_topic != "Select a topic":
+    # Ensure a valid topic is selected before displaying the GIF
+    if selected_topic != "Select a topic":
         st.image(gif_mapping[selected_topic], use_container_width=True)
         st.write(f"**{selected_topic}** visualization")
 
