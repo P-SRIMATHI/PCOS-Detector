@@ -236,25 +236,15 @@ for recipe in recipes:
     import streamlit as st
 import streamlit.components.v1 as components
 
-# Function to display multiple 3D PCOS models
+# Function to display a clickable 3D PCOS model
 def interactive_3d_display():
     st.header("🩺 Explore PCOS in 3D")
     
-    # Define multiple 3D model links (Replace with actual working links)
-    models = {
-        "PCOS Anatomy": "https://sketchfab.com/models/7w7pAfrja5Xc/embed",  # Replace with a valid model
-   }
+    # Embed the 3D model using an iframe
+    model_url = "https://sketchfab.com/models/62bfb490ad344caaaea675da9df7ba34/embed"
     
     st.write("Rotate, zoom, and explore the PCOS-related anatomy interactively.")
-
-    # Dropdown to select different models
-    selected_model = st.selectbox("Choose a 3D model to explore:", list(models.keys()))
-
-    # Display the selected model
-    model_url = models[selected_model]
-    components.iframe(model_url, height=400, width=600)  # Adjusted for better viewing
+    components.iframe(model_url, height=500)
 
 # Call the function in your Streamlit app
 interactive_3d_display()
-
-    
