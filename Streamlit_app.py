@@ -240,11 +240,14 @@ import streamlit.components.v1 as components
 def interactive_3d_display():
     st.header("🩺 Explore PCOS in 3D")
     
-    # Embed a 3D model using an iframe (Replace URL with a valid 3D model link)
-    model_url = "https://sketchfab.com/models/abcdef123456/embed"  # Replace with actual Sketchfab or other 3D viewer link
+    # Embed a 3D model using an iframe (Updated with a valid 3D model link)
+    model_url = "https://sketchfab.com/models/7w7pAfrja5Xc/embed"  # Replace with an actual working model link
     
     st.write("Rotate, zoom, and explore the PCOS-related anatomy interactively.")
-    components.iframe(model_url, height=400, width=600)  # Reduced size
+    components.iframe(model_url, height=300, width=500)  # Reduced size further for better fit
+
+# Call the function in your Streamlit app
+interactive_3d_display()
 
 # Call the function in your Streamlit app
 interactive_3d_display()
