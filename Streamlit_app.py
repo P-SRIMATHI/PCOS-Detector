@@ -243,9 +243,7 @@ def interactive_3d_display():
     # Define multiple 3D model links (Replace with actual working links)
     models = {
         "PCOS Anatomy": "https://sketchfab.com/models/7w7pAfrja5Xc/embed",  # Replace with a valid model
-        "Hormonal Imbalance": "https://www.msdmanuals.com/home/multimedia/3dmodel/polycystic-ovary-syndrome",  # Replace with a valid model
-        
-    }
+   }
     
     st.write("Rotate, zoom, and explore the PCOS-related anatomy interactively.")
 
