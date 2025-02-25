@@ -252,14 +252,12 @@ def interactive_gif_display():
     }
     
     # User selects a topic
-    selected_topic = st.selectbox("Choose a PCOS-related topic:", list(gif_mapping.keys()))
-    
-    # Display corresponding GIF
-    if selected_topic:
-        st.image(gif_mapping[selected_topic], use_container_width=True)  # Fixed deprecation warning
+    selected_topic = st.selectbox("Choose a PCOS-related topic:", options=["Select a topic"] + list(gif_mapping.keys()))
+
+    # Ensure the user selects a valid topic before displaying the GIF
+    if selected_topic and selected_topic != "Select a topic":
+        st.image(gif_mapping[selected_topic], use_container_width=True)
         st.write(f"**{selected_topic}** visualization")
 
 # Call the function in your Streamlit app
 interactive_gif_display()
-
- 
