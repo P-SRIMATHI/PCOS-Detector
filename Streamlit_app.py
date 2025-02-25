@@ -41,10 +41,8 @@ def generate_report(prediction_prob):
 @st.cache_data
 def load_data():
     df = pd.read_csv("PCOS_data.csv")
-    df.columns = df.columns.str.strip()  # Remove extra spaces
-    df.columns = df.columns.str.replace(" ", "_")  # Replace spaces with underscores
-    st.write("Columns in the dataset:", df.columns)  # Display column names for debugging
-    st.write(df.head())  # Show the first few rows of the data for further inspection
+    df.columns = df.columns.str.strip()  
+    df.columns = df.columns.str.replace(" ", "_")  
     return df
 
 # Load dataset and prepare for prediction
