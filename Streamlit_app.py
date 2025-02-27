@@ -240,3 +240,36 @@ def interactive_3d_display():
 
 # Call the function in your Streamlit app
 interactive_3d_display()
+
+def pcos_prediction_game(model, feature_names):
+    print("\n🔮 Welcome to the PCOS Prediction Game! 🔮")
+    print("Answer the following questions to get your PCOS risk prediction.\n")
+    
+    user_input = []
+    for feature in feature_names:
+        while True:
+            try:
+                value = float(input(f"Enter your {feature}: "))
+                user_input.append(value)
+                break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+    
+    # Convert input to numpy array and reshape for model prediction
+    user_input = np.array(user_input).reshape(1, -1)
+    prediction = model.predict(user_input)
+    
+    print("\n🔍 Prediction Result:")
+    if prediction[0] == 1:
+        print("⚠️ High risk of PCOS. Please consult a doctor.")
+    else:
+        print("✅ Low risk of PCOS. Maintain a healthy lifestyle!")
+    
+    print("\nThank you for playing! 💙")
+
+# Get feature names from the trained model
+feature_names = X_filled.columns.tolist()
+
+# Run the game
+pcos_prediction_game(model, feature_names)
+
