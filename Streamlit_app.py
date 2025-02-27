@@ -128,8 +128,9 @@ shap_values = explainer.shap_values(X_test)
 fig, ax = plt.subplots()
 shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
 st.pyplot(fig)
-
 # Health Gamification Section
+import streamlit as st
+
 st.header("3. Health Gamification 🎮")
 if "health_points" not in st.session_state:
     st.session_state.health_points = 0
@@ -162,6 +163,13 @@ else:
 
 # Display Total Health Points
 st.write(f"Total Health Points: {st.session_state.health_points}")
+
+# Celebration if points exceed 40
+if st.session_state.health_points > 40:
+    st.balloons()
+
+
+ 
 
 # Community Support: User can post questions and share experiences
 st.header("4. Community Support 💬")
