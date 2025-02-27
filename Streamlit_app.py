@@ -12,9 +12,6 @@ from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
 
-# Load API Key securely
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Initialize session state variables for gamification and community
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -206,10 +203,6 @@ st.write(f"Total Health Points: {st.session_state.health_points}")
 # Celebration if points exceed 40
 if st.session_state.health_points > 40:
     st.balloons()
-
-
- 
-
 # Community Support: User can post questions and share experiences
 st.header("4. Community Support 💬")
 new_post = st.text_area("Post your experience or ask a question:")
@@ -225,13 +218,6 @@ if st.session_state.posts:
     st.write("### Community Posts:")
     for idx, post in enumerate(st.session_state.posts, 1):
         st.write(f"{idx}. {post}")
-
-# Chatbot Section
-st.header("5. Chatbot 🤖")
-user_question = st.text_input("Ask me anything about PCOS:")
-if user_question:
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
-    st.write(response["choices"][0]["message"]["content"])
 
 # Trivia Quiz Section
 st.header("6. Trivia Quiz 🧠")
