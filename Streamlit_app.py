@@ -240,6 +240,14 @@ def interactive_3d_display():
 
 # Call the function in your Streamlit app
 interactive_3d_display()
+import numpy as np
+import pandas as pd
+import streamlit as st
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Load and prepare dataset
 file_path = "PCOS_data.csv"
 try:
     df = pd.read_csv(file_path)
@@ -256,11 +264,11 @@ try:
     df_cleaned = df_cleaned.apply(pd.to_numeric, errors="coerce")
 
     # Define features (X) and target variable (y)
-    X = df_cleaned.drop(columns=["PCOS (Y/N)"], errors="ignore")
-    y = df_cleaned.get("PCOS (Y/N)")
-    
-    if y is None:
+    if "PCOS (Y/N)" not in df_cleaned.columns:
         raise ValueError("Target column 'PCOS (Y/N)' not found in the dataset.")
+    
+    X = df_cleaned.drop(columns=["PCOS (Y/N)"])
+    y = df_cleaned["PCOS (Y/N)"]
     
     # Handle missing values in features
     X_filled = X.fillna(X.median())
@@ -274,8 +282,8 @@ try:
     
     # Test model accuracy
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"✅ Model Accuracy: {accuracy * 100:.2f}%")
+    model_accuracy = accuracy_score(y_test, y_pred)
+    st.write(f"✅ Model Accuracy: {model_accuracy * 100:.2f}%")
 except Exception as e:
     st.error(f"Error loading dataset: {e}")
     st.stop()
@@ -305,3 +313,11 @@ def pcos_prediction_game():
 # Run the game in Streamlit
 pcos_prediction_game()
 
+ 
+    
+    
+     
+ 
+           
+    
+    
