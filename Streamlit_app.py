@@ -106,7 +106,6 @@ if st.button("Submit Prediction"):
         st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
 
 # Graphs and Data Visualization
-# Graphs and Data Visualization
 st.header("2. Data Visualizations 📊")
 st.subheader("PCOS Prevalence in Different Studies")
 
@@ -120,13 +119,6 @@ ax.set_ylabel("Prevalence (%)")
 ax.set_xlabel("Study Locations & Criteria")
 ax.set_title("PCOS Prevalence in Different Studies")
 plt.xticks(rotation=30, ha='right')
-st.pyplot(fig)
-
-
-st.subheader("Feature Importance")
-feature_importances = model.feature_importances_
-fig, ax = plt.subplots()
-sns.barplot(x=selected_features, y=feature_importances, ax=ax)
 st.pyplot(fig)
 
 st.subheader("SHAP Model Impact")
