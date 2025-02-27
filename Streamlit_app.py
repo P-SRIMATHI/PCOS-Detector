@@ -111,19 +111,20 @@ if st.button("Submit Prediction"):
 # Graphs and Data Visualization
 # Graphs and Data Visualization
 st.header("2. Data Visualizations 📊")
-st.subheader("Case Distribution")
+st.subheader("PCOS Prevalence in Different Studies")
 
-# Updated dataset to reflect actual PCOS prevalence from studies in India
-pcos_percentage = 19.6  # Based on Rotterdam criteria from cross-sectional study
-total_samples = 100  # Sample size for visualization
-pcos_cases = int((pcos_percentage / 100) * total_samples)
-non_pcos_cases = total_samples - pcos_cases
+# Data from different studies
+study_labels = ["Tamil Nadu (18%)", "Mumbai (22.5%)", "Lucknow (3.7%)", "NIH Criteria (7.2%)", "Rotterdam Criteria (19.6%)"]
+study_values = [18, 22.5, 3.7, 7.2, 19.6]
 
-data = pd.DataFrame({"Diagnosis": ["PCOS"] * pcos_cases + ["No PCOS"] * non_pcos_cases})
 fig, ax = plt.subplots()
-sns.countplot(x="Diagnosis", data=data, ax=ax)
-ax.set_xticklabels(["No PCOS", "PCOS"])
+sns.barplot(x=study_labels, y=study_values, ax=ax)
+ax.set_ylabel("Prevalence (%)")
+ax.set_xlabel("Study Locations & Criteria")
+ax.set_title("PCOS Prevalence in Different Studies")
+plt.xticks(rotation=30, ha='right')
 st.pyplot(fig)
+
 
 
 st.subheader("Feature Importance")
