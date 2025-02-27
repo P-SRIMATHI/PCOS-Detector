@@ -119,7 +119,7 @@ ax.set_ylabel("Prevalence (%)")
 ax.set_xlabel("Study Locations & Criteria")
 ax.set_title("PCOS Prevalence in Different Studies")
 plt.xticks(rotation=30, ha='right')
-st.pyplot(fig)pip install plotly
+st.pyplot(fig)
  
 st.subheader("SHAP Model Impact")
 explainer = shap.TreeExplainer(model)
