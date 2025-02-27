@@ -240,35 +240,64 @@ def interactive_3d_display():
 
 # Call the function in your Streamlit app
 interactive_3d_display()
-def pcos_prediction_game(model, feature_names):
-    print("\n🔮 Welcome to the PCOS Prediction Game! 🔮")
-    print("Answer the following questions to get your PCOS risk prediction.\n")
+# Load and prepare dataset
+file_path = "PCOS_data.csv"
+try:
+    df = pd.read_csv(file_path)
+    df_cleaned = df.drop(columns=["Sl. No", "Patient File No.", "Unnamed: 44"], errors="ignore")
+    
+    # Handle missing values
+    for col in df_cleaned.columns:
+        if df_cleaned[col].dtype == "object":
+            df_cleaned[col].fillna(df_cleaned[col].mode()[0], inplace=True)
+        else:
+            df_cleaned[col].fillna(df_cleaned[col].median(), inplace=True)
+    
+    # Convert non-numeric columns to numeric
+    df_cleaned = df_cleaned.apply(pd.to_numeric, errors="coerce")
+
+    # Define features (X) and target variable (y)
+    X = df_cleaned.drop(columns=["PCOS (Y/N)"])
+    y = df_cleaned["PCOS (Y/N)"]
+    
+    # Handle missing values in features
+    X_filled = X.fillna(X.median())
+    
+    # Split dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X_filled, y, test_size=0.2, random_state=42)
+    
+    # Train the RandomForest model
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    
+    # Test model accuracy
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+except Exception as e:
+    st.error(f"Error loading dataset: {e}")
+    st.stop()
+
+# Streamlit UI for PCOS Prediction
+def pcos_prediction_game():
+    st.title("🔮 PCOS Prediction Game")
+    st.write("Answer the following questions to get your PCOS risk prediction.")
     
     user_input = []
-    for feature in feature_names:
-        while True:
-            try:
-                value = float(input(f"Enter your {feature}: "))
-                user_input.append(value)
-                break
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+    for feature in X_filled.columns:
+        value = st.number_input(f"Enter your {feature}", min_value=0.0, format="%.2f")
+        user_input.append(value)
     
-    # Convert input to numpy array and reshape for model prediction
-    user_input = np.array(user_input).reshape(1, -1)
-    prediction = model.predict(user_input)
+    if st.button("Predict PCOS Risk"):
+        user_input = np.array(user_input).reshape(1, -1)
+        prediction = model.predict(user_input)
+        
+        st.subheader("🔍 Prediction Result:")
+        if prediction[0] == 1:
+            st.error("⚠️ High risk of PCOS. Please consult a doctor.")
+        else:
+            st.success("✅ Low risk of PCOS. Maintain a healthy lifestyle!")
     
-    print("\n🔍 Prediction Result:")
-    if prediction[0] == 1:
-        print("⚠️ High risk of PCOS. Please consult a doctor.")
-    else:
-        print("✅ Low risk of PCOS. Maintain a healthy lifestyle!")
-    
-    print("\nThank you for playing! 💙")
+    st.write("\nThank you for playing! 💙")
 
-# Get feature names from the trained model
-feature_names = X_filled.columns.tolist()
-
-# Run the game
-pcos_prediction_game(model, feature_names)
-
+# Run the game in Streamlit
+pcos_prediction_game()
