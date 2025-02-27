@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import streamlit as st
 import shap
 import openai
 from sklearn.model_selection import train_test_split
@@ -10,6 +11,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
+
+# Load API Key securely
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize session state variables for gamification and community
 if "score" not in st.session_state:
@@ -106,29 +110,26 @@ if st.button("Submit Prediction"):
 
 # Graphs and Data Visualization
 st.header("2. Data Visualizations 📊")
-st.subheader("PCOS Prevalence in Different Studies")
-
-# Data from different studies
-study_labels = ["Tamil Nadu (18%)", "Mumbai (22.5%)", "Lucknow (3.7%)", "NIH Criteria (7.2%)", "Rotterdam Criteria (19.6%)"]
-study_values = [18, 22.5, 3.7, 7.2, 19.6]
-
+st.subheader("Case Distribution")
 fig, ax = plt.subplots()
-sns.barplot(x=study_labels, y=study_values, ax=ax)
-ax.set_ylabel("Prevalence (%)")
-ax.set_xlabel("Study Locations & Criteria")
-ax.set_title("PCOS Prevalence in Different Studies")
-plt.xticks(rotation=30, ha='right')
+sns.countplot(x=y, ax=ax)
+ax.set_xticklabels(["No PCOS", "PCOS"])
 st.pyplot(fig)
- 
+
+st.subheader("Feature Importance")
+feature_importances = model.feature_importances_
+fig, ax = plt.subplots()
+sns.barplot(x=selected_features, y=feature_importances, ax=ax)
+st.pyplot(fig)
+
 st.subheader("SHAP Model Impact")
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_test)
 fig, ax = plt.subplots()
 shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
 st.pyplot(fig)
-# Health Gamification Section
-import streamlit as st
 
+# Health Gamification Section
 st.header("3. Health Gamification 🎮")
 if "health_points" not in st.session_state:
     st.session_state.health_points = 0
@@ -162,9 +163,6 @@ else:
 # Display Total Health Points
 st.write(f"Total Health Points: {st.session_state.health_points}")
 
-# Celebration if points exceed 40
-if st.session_state.health_points > 40:
-    st.balloons()
 # Community Support: User can post questions and share experiences
 st.header("4. Community Support 💬")
 new_post = st.text_area("Post your experience or ask a question:")
@@ -180,6 +178,13 @@ if st.session_state.posts:
     st.write("### Community Posts:")
     for idx, post in enumerate(st.session_state.posts, 1):
         st.write(f"{idx}. {post}")
+
+# Chatbot Section
+st.header("5. Chatbot 🤖")
+user_question = st.text_input("Ask me anything about PCOS:")
+if user_question:
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
+    st.write(response["choices"][0]["message"]["content"])
 
 # Trivia Quiz Section
 st.header("6. Trivia Quiz 🧠")
