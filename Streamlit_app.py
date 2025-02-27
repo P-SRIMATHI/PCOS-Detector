@@ -12,9 +12,6 @@ from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
 
-# Load API Key securely
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Initialize session state variables for gamification and community
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -179,14 +176,7 @@ if st.session_state.posts:
     for idx, post in enumerate(st.session_state.posts, 1):
         st.write(f"{idx}. {post}")
 
-# Chatbot Section
-st.header("5. Chatbot 🤖")
-user_question = st.text_input("Ask me anything about PCOS:")
-if user_question:
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": user_question}])
-    st.write(response["choices"][0]["message"]["content"])
-
-# Trivia Quiz Section
+ # Trivia Quiz Section
 st.header("6. Trivia Quiz 🧠")
 questions = {
     "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
