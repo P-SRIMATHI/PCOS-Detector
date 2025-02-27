@@ -1,143 +1,341 @@
-import streamlit as st
+import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px
+import matplotlib.pyplot as plt
+import streamlit as st
 import shap
-import pickle
-import os
-from sklearn.ensemble import RandomForestClassifier
+import openai
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from lime.lime_tabular import LimeTabularExplainer
+from fpdf import FPDF
 
-# Page Configuration
-st.set_page_config(page_title="PCOS Prediction Tool", layout="wide")
-st.title("🩺 PCOS Prediction Tool")
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "posts" not in st.session_state:
+    st.session_state.posts = []
 
-# Sidebar Navigation
-menu = st.sidebar.radio("Navigate to:", ["Home", "Upload Data", "Model Training", "Prediction", "Insights", "PCOS Quiz", "About"])
+def calculate_bmi(weight, height):
+    return weight / ((height / 100) ** 2)
 
-# File Upload Handler
-def load_data(file):
-    df = pd.read_csv(file)
+def generate_report(prediction_prob):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, "PCOS Detection Report", ln=True, align='C')
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, "High probability of PCOS detected." if prediction_prob > 0.5 else "No significant risk of PCOS detected.")
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, "Lifestyle Changes:\n- Maintain a balanced diet\n- Exercise regularly\n- Manage stress\n- Get enough sleep")
+    report_path = "PCOS_Report.pdf"
+    pdf.output(report_path)
+    return report_path
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv("PCOS_data.csv")
+    df.columns = df.columns.str.strip()  
+    df.columns = df.columns.str.replace(" ", "_")  
     return df
 
-# Store uploaded file in session_state
-if "dataset" not in st.session_state:
-    st.session_state.dataset = None
+df = load_data()
 
-if menu == "Home":
-    st.header("Welcome to the PCOS Prediction Tool")
-    st.write("This tool predicts PCOS based on non-invasive features using Machine Learning.")
+possible_features = ["AMH", "betaHCG", "FSH"]
+selected_features = [col for col in df.columns if any(feature in col for feature in possible_features)]
 
-elif menu == "Upload Data":
-    st.header("Upload PCOS Dataset")
-    uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-    if uploaded_file is not None:
-        st.session_state.dataset = load_data(uploaded_file)
-        st.write("Preview of Uploaded Data:")
-        st.dataframe(st.session_state.dataset.head())
+if not selected_features:
+    st.error("None of the selected features are found in the dataset! Please check column names.")
+    st.stop()
 
-elif menu == "Model Training":
-    st.header("Train Machine Learning Model")
+df = df.dropna()
+X = df[selected_features]
+y = df[df.columns[df.columns.str.contains("PCOS")][0]]
 
-    if st.session_state.dataset is not None:
-        df = st.session_state.dataset.copy()
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-        # Assuming "PCOS" is the target variable
-        X = df.drop(columns=["PCOS"])
-        y = df["PCOS"]
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
-        # Handling missing values
-        X.fillna(X.mean(), inplace=True)
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+model = RandomForestClassifier(n_estimators=200, random_state=42)
+model.fit(X_train, y_train)
 
-        # Encoding categorical variables
-        le = LabelEncoder()
-        for col in X.select_dtypes(include=['object']).columns:
-            X[col] = le.fit_transform(X[col])
 
-        # Splitting data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+st.title("PCOS Prediction App")
+st.header("1. PCOS Prediction 🩺")
 
-        # Oversampling using SMOTE
-        smote = SMOTE()
-        X_train, y_train = smote.fit_resample(X_train, y_train)
+weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
+bmi = calculate_bmi(weight, height)
+st.write(f"Calculated BMI: {bmi:.2f}")
 
-        # Scaling
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
 
-        # Model Training with Ensemble Learning
-        rf = RandomForestClassifier()
-        xgb = XGBClassifier()
-        lgbm = LGBMClassifier()
+user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
 
-        rf.fit(X_train, y_train)
-        xgb.fit(X_train, y_train)
-        lgbm.fit(X_train, y_train)
+if st.button("Submit Prediction"):
+    input_df = pd.DataFrame([user_input])
+    prediction_proba = model.predict_proba(input_df)
 
-        # Evaluate models
-        accuracy_rf = accuracy_score(y_test, rf.predict(X_test))
-        accuracy_xgb = accuracy_score(y_test, xgb.predict(X_test))
-        accuracy_lgbm = accuracy_score(y_test, lgbm.predict(X_test))
-
-        st.write(f"Random Forest Accuracy: {accuracy_rf:.2f}")
-        st.write(f"XGBoost Accuracy: {accuracy_xgb:.2f}")
-        st.write(f"LightGBM Accuracy: {accuracy_lgbm:.2f}")
-
-        # Save the best model
-        best_model = max([(rf, accuracy_rf), (xgb, accuracy_xgb), (lgbm, accuracy_lgbm)], key=lambda x: x[1])[0]
-        with open("pcos_model.pkl", "wb") as f:
-            pickle.dump(best_model, f)
-
-        st.success("Model trained and saved successfully!")
+    
+    if isinstance(prediction_proba, np.ndarray) and len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
+        prediction_prob = prediction_proba[0][1]  
     else:
-        st.warning("Please upload data first in the 'Upload Data' section.")
+        prediction_prob = prediction_proba[0]  
 
-elif menu == "Prediction":
-    st.header("PCOS Prediction")
+    prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
+    st.success(prediction)
 
-    if os.path.exists("pcos_model.pkl"):
-        with open("pcos_model.pkl", "rb") as f:
-            model = pickle.load(f)
+    
+    report_path = generate_report(prediction_prob)
+    with open(report_path, "rb") as file:
+        st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
 
-        st.write("Enter patient details to predict PCOS")
+    # AI-powered Alerts (based on model prediction)
+    st.header("AI-powered Alerts")
+    if prediction_prob > 0.8:
+        st.warning("High risk of PCOS detected. Consider consulting a healthcare professional.")
+    elif prediction_prob > 0.5:
+        st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
 
-        age = st.slider("Age", 15, 50, 25)
-        bmi = st.slider("BMI", 15, 40, 25)
-        waist_hip_ratio = st.slider("Waist-Hip Ratio", 0.6, 1.2, 0.85)
-        irregular_periods = st.radio("Do you have irregular menstrual cycles?", ["Yes", "No"])
-        acne = st.radio("Do you have acne or oily skin?", ["Yes", "No"])
-        weight_gain = st.radio("Do you experience sudden weight gain?", ["Yes", "No"])
+# Graphs and Data Visualization
+st.header("2. Data Visualizations 📊")
+st.subheader("PCOS Prevalence in Different Studies")
 
-        # Convert categorical inputs to numerical
-        features = np.array([
-            age, bmi, waist_hip_ratio, 
-            1 if irregular_periods == "Yes" else 0,
-            1 if acne == "Yes" else 0,
-            1 if weight_gain == "Yes" else 0
-        ]).reshape(1, -1)
+# Data from different studies
+study_labels = ["Tamil Nadu (18%)", "Mumbai (22.5%)", "Lucknow (3.7%)", "NIH Criteria (7.2%)", "Rotterdam Criteria (19.6%)"]
+study_values = [18, 22.5, 3.7, 7.2, 19.6]
 
-        prediction = model.predict(features)
+fig, ax = plt.subplots()
+sns.barplot(x=study_labels, y=study_values, ax=ax)
+ax.set_ylabel("Prevalence (%)")
+ax.set_xlabel("Study Locations & Criteria")
+ax.set_title("PCOS Prevalence in Different Studies")
+plt.xticks(rotation=30, ha='right')
+st.pyplot(fig)
 
-        st.write("Prediction Result:")
-        if prediction[0] == 1:
-            st.error("PCOS Detected! Consult a doctor for further analysis.")
+st.subheader("SHAP Model Impact")
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(X_test)
+fig, ax = plt.subplots()
+shap.summary_plot(shap_values, X_test, feature_names=selected_features, show=False)
+st.pyplot(fig)
+
+# Health Gamification Section
+st.header("3. Health Gamification 🎮")
+if "health_points" not in st.session_state:
+    st.session_state.health_points = 0
+if "water_intake" not in st.session_state:
+    st.session_state.water_intake = 0
+if "steps_walked" not in st.session_state:
+    st.session_state.steps_walked = 0
+
+# Track Water Intake
+water_glasses = st.slider("How many glasses of water did you drink today?", min_value=0, max_value=15)
+st.session_state.water_intake = water_glasses
+
+# Reward for Drinking Water
+if st.session_state.water_intake >= 8:
+    st.session_state.health_points += 10  # Give points for completing water goal
+    st.success("Great job! You've completed your water intake goal! +10 points")
+else:
+    st.warning(f"Drink more water! You've had {st.session_state.water_intake} glasses.")
+
+# Track Steps (example challenge)
+steps = st.slider("How many steps did you walk today?", min_value=0, max_value=20000)
+st.session_state.steps_walked = steps
+
+# Reward for Walking Steps
+if st.session_state.steps_walked >= 10000:
+    st.session_state.health_points += 20  # Give points for walking 10,000 steps
+    st.success("Amazing! You've reached 10,000 steps! +20 points")
+else:
+    st.warning(f"You're doing well! You've walked {st.session_state.steps_walked} steps today.")
+
+# Display Total Health Points
+st.write(f"Total Health Points: {st.session_state.health_points}")
+
+# Celebration if points exceed 40
+if st.session_state.health_points > 40:
+    st.balloons() 
+
+# Display Total Health Points
+st.write(f"Total Health Points: {st.session_state.health_points}")
+
+# Community Support: User can post questions and share experiences
+st.header("4. Community Support 💬")
+new_post = st.text_area("Post your experience or ask a question:")
+if st.button("Submit Post"):
+    if new_post:
+        st.session_state.posts.append(new_post)
+        st.success("Post submitted successfully!")
+    else:
+        st.warning("Please write something to post.")
+
+# Display Community Posts
+if st.session_state.posts:
+    st.write("### Community Posts:")
+    for idx, post in enumerate(st.session_state.posts, 1):
+        st.write(f"{idx}. {post}")
+
+ # Trivia Quiz Section
+st.header("5. Trivia Quiz 🧠")
+questions = {
+    "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
+    "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
+    "What lifestyle change can help manage PCOS?": ["Regular exercise", "Skipping meals", "High sugar diet"]
+}
+
+quiz_score = 0  # Initialize quiz score
+for question, options in questions.items():
+    answer = st.radio(question, options)
+    if answer == options[0]:
+        quiz_score += 1
+st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
+
+st.session_state.score += quiz_score  # Add quiz score to session score
+
+# Mood Tracker (last section)
+st.header("6.Mood Tracker 😊")
+mood = st.selectbox("How do you feel today?", ["Happy", "Excited", "Neutral", "Sad", "Anxious"])
+
+# Display mood and give advice
+if mood:
+    mood_advice = {
+        "Happy": "Keep up the great energy! 🌟",
+        "Excited": "Enjoy the excitement! 🌈",
+        "Neutral": "It's okay to feel neutral, take it easy. ☁",
+        "Sad": "Take care of yourself, things will get better. 💙",
+        "Anxious": "Try some deep breaths, you're doing well. 🌱"
+    }
+    st.write(f"You are feeling: {mood}")
+    st.write(mood_advice.get(mood, "Stay strong!"))
+
+# Recipes Section (last section)
+st.header("7. PCOS-Friendly Recipes 🍲")
+recipes = [
+    {"name": "Spinach & Chickpea Curry", "ingredients": ["Spinach", "Chickpeas", "Coconut milk", "Garlic", "Ginger"]},
+    {"name": "Oats Pancakes", "ingredients": ["Oats", "Eggs", "Banana", "Almond milk"]},
+    {"name": "Greek Yogurt Salad", "ingredients": ["Greek Yogurt", "Cucumber", "Olives", "Olive oil", "Lemon"]},
+]
+
+# Display recipes
+for recipe in recipes:
+    st.subheader(recipe["name"])
+    st.write("Ingredients:", ", ".join(recipe["ingredients"]))
+    import streamlit as st
+import streamlit.components.v1 as components
+
+# Function to display a clickable 3D PCOS model
+def interactive_3d_display():
+    st.header("🩺 Explore PCOS in 3D")
+    
+    # Embed the 3D model using an iframe
+    model_url = "https://sketchfab.com/models/62bfb490ad344caaaea675da9df7ba34/embed"
+    
+    st.write("Rotate, zoom, and explore the PCOS-related anatomy interactively.")
+    components.iframe(model_url, height=500)
+
+# Call the function in your Streamlit app
+interactive_3d_display()
+import numpy as np
+import pandas as pd
+import streamlit as st
+import time
+import random
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Load and prepare dataset
+file_path = "PCOS_data.csv"
+try:
+    df = pd.read_csv(file_path)
+    df_cleaned = df.drop(columns=["Sl. No", "Patient File No.", "Unnamed: 44"], errors="ignore")
+    
+    # Handle missing values
+    for col in df_cleaned.columns:
+        if df_cleaned[col].dtype == "object":
+            df_cleaned[col].fillna(df_cleaned[col].mode()[0], inplace=True)
         else:
-            st.success("No PCOS detected. Keep maintaining a healthy lifestyle.")
+            df_cleaned[col].fillna(df_cleaned[col].median(), inplace=True)
+    
+    # Convert non-numeric columns to numeric
+    df_cleaned = df_cleaned.apply(pd.to_numeric, errors="coerce")
 
-    else:
-        st.error("Model file not found. Please train the model first.")
+    # Define features (X) and target variable (y)
+    if "PCOS (Y/N)" not in df_cleaned.columns:
+        raise ValueError("Target column 'PCOS (Y/N)' not found in the dataset.")
+    
+    X = df_cleaned.drop(columns=["PCOS (Y/N)"])
+    y = df_cleaned["PCOS (Y/N)"]
+    
+    # Handle missing values in features
+    X_filled = X.fillna(X.median())
+    
+    # Split dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X_filled, y, test_size=0.2, random_state=42)
+    
+    # Train the RandomForest model
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    
+    # Test model accuracy
+    y_pred = model.predict(X_test)
+    model_accuracy = accuracy_score(y_test, y_pred)
+    st.sidebar.write(f"✅ Model Accuracy: {model_accuracy * 100:.2f}%")
+except Exception as e:
+    st.error(f"Error loading dataset: {e}")
+    st.stop()
 
-elif menu == "PCOS Quiz":
-    st.header("Take the PCOS Risk Quiz")
+# Fun facts about PCOS
+fun_facts = [
+    "Did you know? PCOS affects 1 in 10 women of reproductive age!",
+    "Lifestyle changes, such as exercise and a balanced diet, can help manage PCOS symptoms.",
+    "PCOS is one of the leading causes of infertility in women.",
+    "Insulin resistance is a key factor in PCOS development.",
+    "Maintaining a healthy weight can reduce PCOS symptoms!"
+]
 
-    questions = [
-        "
+# Streamlit UI for PCOS Prediction
+def pcos_prediction_game():
+    st.title("🎮 PCOS Prediction Game")
+    st.write("Answer the following questions and unlock insights! 🎯")
+    
+    user_input = []
+    progress_bar = st.progress(0)
+    for idx, feature in enumerate(X_filled.columns):
+        value = st.number_input(f"Enter your {feature}", min_value=0.0, format="%.2f")
+        user_input.append(value)
+        progress_bar.progress((idx + 1) / len(X_filled.columns))
+    
+    if st.button("🎲 Predict PCOS Risk!"):
+        with st.spinner("Analyzing your data...🔍"):
+            time.sleep(2)  # Simulate processing time
+            user_input = np.array(user_input).reshape(1, -1)
+            prediction = model.predict(user_input)
+            risk_level = random.randint(1, 100)
+        
+        st.subheader("🔮 Prediction Result:")
+        if prediction[0] == 1:
+            st.error(f"⚠ High risk of PCOS. Your estimated risk level: {risk_level}%")
+            st.write(random.choice(fun_facts))
+        else:
+            st.success(f"✅ Low risk of PCOS. Your estimated risk level: {risk_level}%")
+            st.write("Great job! Keep maintaining a healthy lifestyle. 💪")
+        
+        # Show a gauge chart for risk level
+        st.write("### 📊 Your Risk Level")
+        fig, ax = plt.subplots()
+        sns.barplot(x=["Low", "Medium", "High"], y=[30, 60, 90], color='lightgray')
+        ax.bar(["Low", "Medium", "High"], [30, 60, risk_level], color=['green', 'orange', 'red'])
+        st.pyplot(fig)
+    
+    st.write("\nThank you for playing! 🌟")
+
+# Run the game in Streamlit
+pcos_prediction_game()
