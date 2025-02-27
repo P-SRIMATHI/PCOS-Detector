@@ -186,7 +186,7 @@ if st.session_state.posts:
         st.write(f"{idx}. {post}")
 
  # Trivia Quiz Section
-st.header("6. Trivia Quiz 🧠")
+st.header("5. Trivia Quiz 🧠")
 questions = {
     "What is a common symptom of PCOS?": ["Irregular periods", "Acne", "Hair loss"],
     "Which hormone is often imbalanced in PCOS?": ["Insulin", "Estrogen", "Progesterone"],
@@ -203,7 +203,7 @@ st.write(f"Your final quiz score: {quiz_score}/{len(questions)}")
 st.session_state.score += quiz_score  # Add quiz score to session score
 
 # Mood Tracker (last section)
-st.header("7. Mood Tracker 😊")
+st.header("6.Mood Tracker 😊")
 mood = st.selectbox("How do you feel today?", ["Happy", "Excited", "Neutral", "Sad", "Anxious"])
 
 # Display mood and give advice
@@ -219,7 +219,7 @@ if mood:
     st.write(mood_advice.get(mood, "Stay strong!"))
 
 # Recipes Section (last section)
-st.header("8. PCOS-Friendly Recipes 🍲")
+st.header("7. PCOS-Friendly Recipes 🍲")
 recipes = [
     {"name": "Spinach & Chickpea Curry", "ingredients": ["Spinach", "Chickpeas", "Coconut milk", "Garlic", "Ginger"]},
     {"name": "Oats Pancakes", "ingredients": ["Oats", "Eggs", "Banana", "Almond milk"]},
