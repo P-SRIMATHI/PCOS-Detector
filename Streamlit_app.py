@@ -123,25 +123,30 @@ ax.set_xlabel("Study Locations & Criteria")
 ax.set_title("PCOS Prevalence in Different Studies")
 plt.xticks(rotation=30, ha='right')
 st.pyplot(fig)
-
 st.subheader("Feature Importance")
 
-# Check if the model is trained
 if hasattr(model, "feature_importances_"):
     feature_importances = model.feature_importances_
 
-    # Convert to DataFrame for better visualization
-    importance_df = pd.DataFrame({"Feature": selected_features, "Importance": feature_importances})
-    importance_df = importance_df.sort_values(by="Importance", ascending=False)
+    # Debugging prints
+    st.write("Feature Importances:", feature_importances)
+    st.write("Selected Features:", selected_features)
 
-    # Plot the feature importance
-    fig, ax = plt.subplots()
-    sns.barplot(x=importance_df["Feature"], y=importance_df["Importance"], ax=ax)
-    plt.xticks(rotation=30, ha='right')
-    ax.set_title("Feature Importance")
-    st.pyplot(fig)
+    # Check if values exist
+    if len(feature_importances) > 0 and len(selected_features) == len(feature_importances):
+        importance_df = pd.DataFrame({"Feature": selected_features, "Importance": feature_importances})
+        importance_df = importance_df.sort_values(by="Importance", ascending=False)
+
+        # Plot the feature importance
+        fig, ax = plt.subplots()
+        sns.barplot(x=importance_df["Feature"], y=importance_df["Importance"], ax=ax)
+        plt.xticks(rotation=30, ha='right')
+        ax.set_title("Feature Importance")
+        st.pyplot(fig)
+    else:
+        st.warning("Feature importances are empty or feature names don't match!")
 else:
-    st.warning("Model is not trained yet! Please train the model before viewing feature importance.")
+    st.warning("Model is not trained yet! Train the model before viewing feature importance.")
 
 
 st.subheader("SHAP Model Impact")
