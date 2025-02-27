@@ -109,15 +109,22 @@ if st.button("Submit Prediction"):
         st.info("Moderate risk of PCOS detected. Lifestyle changes are recommended.")
 
 # Graphs and Data Visualization
+# Graphs and Data Visualization
 st.header("2. Data Visualizations 📊")
 st.subheader("Case Distribution")
 
-# Updated dataset to reflect real-world PCOS prevalence (~10% of women)
-data = pd.DataFrame({"Diagnosis": ["PCOS"] * 10 + ["No PCOS"] * 90})
+# Updated dataset to reflect actual PCOS prevalence from studies in India
+pcos_percentage = 19.6  # Based on Rotterdam criteria from cross-sectional study
+total_samples = 100  # Sample size for visualization
+pcos_cases = int((pcos_percentage / 100) * total_samples)
+non_pcos_cases = total_samples - pcos_cases
+
+data = pd.DataFrame({"Diagnosis": ["PCOS"] * pcos_cases + ["No PCOS"] * non_pcos_cases})
 fig, ax = plt.subplots()
 sns.countplot(x="Diagnosis", data=data, ax=ax)
 ax.set_xticklabels(["No PCOS", "PCOS"])
 st.pyplot(fig)
+
 
 st.subheader("Feature Importance")
 feature_importances = model.feature_importances_
