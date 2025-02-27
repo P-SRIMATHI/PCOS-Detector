@@ -133,7 +133,7 @@ if "df" in locals() or "df" in globals():
 else:
     st.warning("No dataset found! Load your PCOS dataset first.")
  
- st.subheader("SHAP Model Impact")
+st.subheader("SHAP Model Impact")
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_test)
 fig, ax = plt.subplots()
