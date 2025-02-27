@@ -125,10 +125,24 @@ plt.xticks(rotation=30, ha='right')
 st.pyplot(fig)
 
 st.subheader("Feature Importance")
-feature_importances = model.feature_importances_
-fig, ax = plt.subplots()
-sns.barplot(x=selected_features, y=feature_importances, ax=ax)
-st.pyplot(fig)
+
+# Check if the model is trained
+if hasattr(model, "feature_importances_"):
+    feature_importances = model.feature_importances_
+
+    # Convert to DataFrame for better visualization
+    importance_df = pd.DataFrame({"Feature": selected_features, "Importance": feature_importances})
+    importance_df = importance_df.sort_values(by="Importance", ascending=False)
+
+    # Plot the feature importance
+    fig, ax = plt.subplots()
+    sns.barplot(x=importance_df["Feature"], y=importance_df["Importance"], ax=ax)
+    plt.xticks(rotation=30, ha='right')
+    ax.set_title("Feature Importance")
+    st.pyplot(fig)
+else:
+    st.warning("Model is not trained yet! Please train the model before viewing feature importance.")
+
 
 st.subheader("SHAP Model Impact")
 explainer = shap.TreeExplainer(model)
