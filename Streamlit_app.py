@@ -243,6 +243,10 @@ interactive_3d_display()
 import numpy as np
 import pandas as pd
 import streamlit as st
+import time
+import random
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -283,41 +287,55 @@ try:
     # Test model accuracy
     y_pred = model.predict(X_test)
     model_accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"✅ Model Accuracy: {model_accuracy * 100:.2f}%")
+    st.sidebar.write(f"✅ Model Accuracy: {model_accuracy * 100:.2f}%")
 except Exception as e:
     st.error(f"Error loading dataset: {e}")
     st.stop()
 
+# Fun facts about PCOS
+fun_facts = [
+    "Did you know? PCOS affects 1 in 10 women of reproductive age!",
+    "Lifestyle changes, such as exercise and a balanced diet, can help manage PCOS symptoms.",
+    "PCOS is one of the leading causes of infertility in women.",
+    "Insulin resistance is a key factor in PCOS development.",
+    "Maintaining a healthy weight can reduce PCOS symptoms!"
+]
+
 # Streamlit UI for PCOS Prediction
 def pcos_prediction_game():
-    st.title("🔮 PCOS Prediction Game")
-    st.write("Answer the following questions to get your PCOS risk prediction.")
+    st.title("🎮 PCOS Prediction Game")
+    st.write("Answer the following questions and unlock insights! 🎯")
     
     user_input = []
-    for feature in X_filled.columns:
+    progress_bar = st.progress(0)
+    for idx, feature in enumerate(X_filled.columns):
         value = st.number_input(f"Enter your {feature}", min_value=0.0, format="%.2f")
         user_input.append(value)
+        progress_bar.progress((idx + 1) / len(X_filled.columns))
     
-    if st.button("Predict PCOS Risk"):
-        user_input = np.array(user_input).reshape(1, -1)
-        prediction = model.predict(user_input)
+    if st.button("🎲 Predict PCOS Risk!"):
+        with st.spinner("Analyzing your data...🔍"):
+            time.sleep(2)  # Simulate processing time
+            user_input = np.array(user_input).reshape(1, -1)
+            prediction = model.predict(user_input)
+            risk_level = random.randint(1, 100)
         
-        st.subheader("🔍 Prediction Result:")
+        st.subheader("🔮 Prediction Result:")
         if prediction[0] == 1:
-            st.error("⚠️ High risk of PCOS. Please consult a doctor.")
+            st.error(f"⚠️ High risk of PCOS. Your estimated risk level: {risk_level}%")
+            st.write(random.choice(fun_facts))
         else:
-            st.success("✅ Low risk of PCOS. Maintain a healthy lifestyle!")
+            st.success(f"✅ Low risk of PCOS. Your estimated risk level: {risk_level}%")
+            st.write("Great job! Keep maintaining a healthy lifestyle. 💪")
+        
+        # Show a gauge chart for risk level
+        st.write("### 📊 Your Risk Level")
+        fig, ax = plt.subplots()
+        sns.barplot(x=["Low", "Medium", "High"], y=[30, 60, 90], color='lightgray')
+        ax.bar(["Low", "Medium", "High"], [30, 60, risk_level], color=['green', 'orange', 'red'])
+        st.pyplot(fig)
     
-    st.write("\nThank you for playing! 💙")
+    st.write("\nThank you for playing! 🌟")
 
 # Run the game in Streamlit
 pcos_prediction_game()
-
- 
-    
-    
-     
- 
-           
-    
-    
