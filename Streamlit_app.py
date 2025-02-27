@@ -12,7 +12,6 @@ from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from fpdf import FPDF
 
-# Initialize session state variables for gamification and community
 if "score" not in st.session_state:
     st.session_state.score = 0
 if "posts" not in st.session_state:
@@ -34,7 +33,6 @@ def generate_report(prediction_prob):
     pdf.output(report_path)
     return report_path
 
-# Load Data and handle column issues
 @st.cache_data
 def load_data():
     df = pd.read_csv("PCOS_data.csv")
@@ -42,10 +40,8 @@ def load_data():
     df.columns = df.columns.str.replace(" ", "_")  
     return df
 
-# Load dataset and prepare for prediction
 df = load_data()
 
-# Define the features you're interested in (ensure they exist in your dataset)
 possible_features = ["AMH", "betaHCG", "FSH"]
 selected_features = [col for col in df.columns if any(feature in col for feature in possible_features)]
 
@@ -53,7 +49,6 @@ if not selected_features:
     st.error("None of the selected features are found in the dataset! Please check column names.")
     st.stop()
 
-# Preprocessing and Model Training
 df = df.dropna()
 X = df[selected_features]
 y = df[df.columns[df.columns.str.contains("PCOS")][0]]
@@ -68,7 +63,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, te
 model = RandomForestClassifier(n_estimators=200, random_state=42)
 model.fit(X_train, y_train)
 
-# Streamlit App Layout and Features
+
 st.title("PCOS Prediction App")
 st.header("1. PCOS Prediction 🩺")
 
@@ -77,23 +72,23 @@ height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=
 bmi = calculate_bmi(weight, height)
 st.write(f"Calculated BMI: {bmi:.2f}")
 
-# User input and Prediction
+
 user_input = {col: st.number_input(f"{col}", value=float(pd.to_numeric(X.iloc[:, i], errors="coerce").mean(skipna=True) or 0)) for i, col in enumerate(selected_features)}
 
 if st.button("Submit Prediction"):
     input_df = pd.DataFrame([user_input])
     prediction_proba = model.predict_proba(input_df)
 
-    # Check if prediction_proba is a NumPy array and has a shape attribute
+    
     if isinstance(prediction_proba, np.ndarray) and len(prediction_proba.shape) == 2 and prediction_proba.shape[1] > 1:
-        prediction_prob = prediction_proba[0][1]  # Probability of PCOS
+        prediction_prob = prediction_proba[0][1]  
     else:
-        prediction_prob = prediction_proba[0]  # If only one probability value is returned
+        prediction_prob = prediction_proba[0]  
 
     prediction = "PCOS Detected" if prediction_prob > 0.5 else "No PCOS Detected"
     st.success(prediction)
 
-    # Generate and provide report
+    
     report_path = generate_report(prediction_prob)
     with open(report_path, "rb") as file:
         st.download_button("Download Report", file, file_name="PCOS_Report.pdf")
