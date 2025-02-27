@@ -160,6 +160,13 @@ else:
 # Display Total Health Points
 st.write(f"Total Health Points: {st.session_state.health_points}")
 
+# Celebration if points exceed 40
+if st.session_state.health_points > 40:
+    st.balloons() 
+
+# Display Total Health Points
+st.write(f"Total Health Points: {st.session_state.health_points}")
+
 # Community Support: User can post questions and share experiences
 st.header("4. Community Support 💬")
 new_post = st.text_area("Post your experience or ask a question:")
