@@ -111,8 +111,11 @@ if st.button("Submit Prediction"):
 # Graphs and Data Visualization
 st.header("2. Data Visualizations 📊")
 st.subheader("Case Distribution")
+
+# Updated dataset to reflect real-world PCOS prevalence (~10% of women)
+data = pd.DataFrame({"Diagnosis": ["PCOS"] * 10 + ["No PCOS"] * 90})
 fig, ax = plt.subplots()
-sns.countplot(x=y, ax=ax)
+sns.countplot(x="Diagnosis", data=data, ax=ax)
 ax.set_xticklabels(["No PCOS", "PCOS"])
 st.pyplot(fig)
 
