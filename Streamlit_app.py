@@ -240,7 +240,6 @@ def interactive_3d_display():
 
 # Call the function in your Streamlit app
 interactive_3d_display()
-
 def pcos_prediction_game(model, feature_names):
     print("\n🔮 Welcome to the PCOS Prediction Game! 🔮")
     print("Answer the following questions to get your PCOS risk prediction.\n")
