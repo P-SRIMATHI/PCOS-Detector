@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import streamlit as st
+import plotly.express as px
 import shap
 import openai
 from sklearn.model_selection import train_test_split
@@ -123,36 +123,42 @@ ax.set_xlabel("Study Locations & Criteria")
 ax.set_title("PCOS Prevalence in Different Studies")
 plt.xticks(rotation=30, ha='right')
 st.pyplot(fig)
-
+ 
 st.subheader("Feature Importance")
 
-# Check if model has 'feature_importances_' attribute
-if hasattr(model, "feature_importances_"):
-    feature_importances = model.feature_importances_
+# Check if model has feature importances
+if "model" in locals() or "model" in globals():
+    if hasattr(model, "feature_importances_"):
+        feature_importances = model.feature_importances_
 
-    # Debugging prints
-    st.write("Feature Importances:", feature_importances)
-    st.write("Selected Features:", selected_features)
+        # Ensure selected_features exists and matches the feature importance length
+        if "selected_features" in locals() or "selected_features" in globals():
+            if isinstance(selected_features, list) and len(selected_features) == len(feature_importances):
 
-    # Ensure the feature importance and selected features match in length
-    if len(feature_importances) == len(selected_features):
-        importance_df = pd.DataFrame({
-            "Feature": selected_features,
-            "Importance": feature_importances
-        })
-        importance_df = importance_df.sort_values(by="Importance", ascending=False)
+                # Create DataFrame
+                importance_df = pd.DataFrame({
+                    "Feature": selected_features,
+                    "Importance": feature_importances
+                })
+                importance_df = importance_df.sort_values(by="Importance", ascending=True)  # For horizontal bar chart
 
-        # Plot the feature importance
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.barplot(x="Importance", y="Feature", data=importance_df, ax=ax)
-        ax.set_title("Feature Importance")
-        plt.xticks(rotation=30, ha='right')
-        st.pyplot(fig)
+                # Plot using Plotly
+                fig = px.bar(importance_df, x="Importance", y="Feature", orientation="h",
+                             title="Feature Importance", text_auto=True, height=600)
+                st.plotly_chart(fig)
+
+            else:
+                st.warning("Mismatch in feature importances and selected features length or invalid type!")
+        else:
+            st.warning("Variable 'selected_features' is not defined!")
+
     else:
-        st.warning("Feature importances and selected features do not match in length!")
+        st.warning("Model does not have feature importances. Make sure it's a tree-based model!")
 else:
-    st.warning("Model is not trained yet! Train the model before viewing feature importance.")
+    st.warning("Model is not defined! Train the model first.")
 
+
+ 
 
 
 st.subheader("SHAP Model Impact")
