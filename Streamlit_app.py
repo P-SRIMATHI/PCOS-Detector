@@ -119,19 +119,7 @@ ax.set_ylabel("Prevalence (%)")
 ax.set_xlabel("Study Locations & Criteria")
 ax.set_title("PCOS Prevalence in Different Studies")
 plt.xticks(rotation=30, ha='right')
-st.pyplot(fig)
-
-st.subheader("BMI vs. PCOS Status")
-
-if "df" in locals() or "df" in globals():
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.scatterplot(x=df["BMI"], y=df["Insulin_Level"], hue=df["PCOS_Diagnosis"], palette="coolwarm", ax=ax)  # Replace with actual column names
-    ax.set_title("BMI vs. Insulin Level (Colored by PCOS Diagnosis)")
-    ax.set_xlabel("BMI")
-    ax.set_ylabel("Insulin Level")
-    st.pyplot(fig)
-else:
-    st.warning("No dataset found! Load your PCOS dataset first.")
+st.pyplot(fig)pip install plotly
  
 st.subheader("SHAP Model Impact")
 explainer = shap.TreeExplainer(model)
